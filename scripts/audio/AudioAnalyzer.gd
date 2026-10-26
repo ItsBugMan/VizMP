@@ -42,6 +42,7 @@ var _effect_index: int = -1
 var _owns_effect: bool = false
 var _elapsed: float = 0.0
 var _clock: float = 0.0
+var _last_analysis_time: float = 0.0
 var _last_beat: float = -10.0
 var _baseline: float = 0.0
 var _previous_level: float = 0.0
@@ -92,7 +93,8 @@ func _process(delta: float) -> void:
 	if _elapsed < ANALYSIS_STEP or not is_ready:
 		return
 	# One current sample per tick; never repeat stale FFT reads to catch up.
-	var dt: float = _elapsed
+	var dt: float = _clock - _last_analysis_time
+	_last_analysis_time = _clock
 	_elapsed = fmod(_elapsed, ANALYSIS_STEP)
 	var total: float = 0.0
 	for i in range(BIN_COUNT):
