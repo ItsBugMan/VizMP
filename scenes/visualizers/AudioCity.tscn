@@ -1,0 +1,43 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/visualizers/AudioCity.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/visualizers/CityCamera.gd" id="2"]
+[ext_resource type="Shader" path="res://shaders/city_buildings.gdshader" id="3"]
+[ext_resource type="Shader" path="res://shaders/city_floor.gdshader" id="4"]
+
+[sub_resource type="Environment" id="Environment"]
+background_mode = 1
+background_color = Color(0.004, 0.008, 0.022, 1)
+tonemap_mode = 3
+glow_enabled = true
+glow_intensity = 0.7
+glow_bloom = 0.05
+glow_hdr_threshold = 1.0
+
+[sub_resource type="ShaderMaterial" id="BuildingsMaterial"]
+shader = ExtResource("3")
+
+[sub_resource type="ShaderMaterial" id="FloorMaterial"]
+shader = ExtResource("4")
+
+[node name="AudioCity" type="Node3D"]
+script = ExtResource("1")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+current = true
+near = 0.2
+far = 300.0
+fov = 58.0
+script = ExtResource("2")
+
+[node name="Buildings" type="MultiMeshInstance3D" parent="."]
+cast_shadow = 0
+material_override = SubResource("BuildingsMaterial")
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+position = Vector3(0, -0.03, 0)
+cast_shadow = 0
+material_override = SubResource("FloorMaterial")

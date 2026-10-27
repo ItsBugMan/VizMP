@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "name": "Amber Terminal",
+  "colors": {"background":"#17130c", "panel":"#241e13", "surface":"#332a1b", "border":"#605035", "accent":"#ffc76b", "text":"#f5e5ca", "muted":"#bca580"}
+}

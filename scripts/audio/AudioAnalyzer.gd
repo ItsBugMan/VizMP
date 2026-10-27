@@ -1,6 +1,6 @@
 extends Node
 ## Autoload named AudioAnalyzer; deliberately no class_name collision.
-## Analyzes audio routed THROUGH Godot's Master bus, not desktop loopback.
+## Analyzes the selected Godot bus; desktop PCM uses DesktopAnalysis.
 ## Consumers borrow the arrays below: do not mutate them. Use duplicate() if
 ## retaining a historical frame. The buffers are updated in place at 60 Hz.
 
@@ -59,11 +59,18 @@ func _ready() -> void:
 	var upper: float = minf(MAX_HZ, AudioServer.get_mix_rate() * 0.5)
 	for i in range(BIN_COUNT + 1):
 		frequency_edges[i] = MIN_HZ * pow(upper / MIN_HZ, float(i) / BIN_COUNT)
-	_bus_index = AudioServer.get_bus_index(&"Master")
-	if _bus_index < 0:
-		push_error("VizMP: Master audio bus is missing.")
-		set_process(false)
-		return
+	set_analysis_bus(&"Master")
+
+func set_analysis_bus(bus_name: StringName) -> bool:
+	var next_bus: int = AudioServer.get_bus_index(bus_name)
+	if next_bus < 0:
+		push_error("VizMP: Missing analysis bus: " + String(bus_name))
+		return false
+	_release_owned_effect()
+	_effect = null
+	_instance = null
+	_owns_effect = false
+	_bus_index = next_bus
 	# Reuse a configured analyzer instead of adding duplicates on scene changes.
 	for i in range(AudioServer.get_bus_effect_count(_bus_index)):
 		var candidate := AudioServer.get_bus_effect(_bus_index, i)
@@ -84,7 +91,20 @@ func _ready() -> void:
 	is_ready = _instance != null
 	if not is_ready:
 		push_error("VizMP: Could not acquire spectrum analyzer instance.")
-		set_process(false)
+	set_process(is_ready)
+	reset_history()
+	spectrum.fill(0.0)
+	spectrum_left.fill(0.0)
+	spectrum_right.fill(0.0)
+	raw_spectrum.fill(0.0)
+	sub_bass = 0.0
+	bass = 0.0
+	mid = 0.0
+	treble = 0.0
+	highs = 0.0
+	volume = 0.0
+	spectrum_updated.emit()
+	return is_ready
 
 func _process(delta: float) -> void:
 	_clock += delta
@@ -159,8 +179,11 @@ func reset_history() -> void:
 	_last_beat = _clock
 
 func _exit_tree() -> void:
+	_release_owned_effect()
+
+func _release_owned_effect() -> void:
 	# Remove only our own resource, even if another system reordered effects.
-	var bus: int = AudioServer.get_bus_index(&"Master")
+	var bus: int = _bus_index
 	if not _owns_effect or bus < 0:
 		return
 	for i in range(AudioServer.get_bus_effect_count(bus)):

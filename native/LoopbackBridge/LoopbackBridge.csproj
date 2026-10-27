@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>VizMPLoopback</AssemblyName>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
+  </ItemGroup>
+  <Target Name="VizMPCopyRuntimeNotices" AfterTargets="Publish" Condition="'$(SelfContained)' == 'true'">
+    <ItemGroup>
+      <VizMPNetRuntime Include="@(ResolvedRuntimePack)" Condition="'%(FrameworkName)' == 'Microsoft.NETCore.App'" />
+      <RuntimeNotice Include="@(VizMPNetRuntime->'%(PackageDirectory)/LICENSE.TXT')" />
+      <RuntimeNotice Include="@(VizMPNetRuntime->'%(PackageDirectory)/THIRD-PARTY-NOTICES.TXT')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(RuntimeNotice)" DestinationFolder="$(PublishDir)" />
+  </Target>
+</Project>

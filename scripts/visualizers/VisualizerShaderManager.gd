@@ -6,6 +6,7 @@ extends Node
 var _pixels := PackedByteArray()
 var _image: Image
 var _texture: ImageTexture
+var _beat_serial: int = 0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -14,7 +15,15 @@ func _ready() -> void:
 	_texture = ImageTexture.create_from_image(_image)
 	RenderingServer.global_shader_parameter_set(&"audio_spectrum", _texture)
 	AudioAnalyzer.spectrum_updated.connect(_publish_spectrum)
+	AudioAnalyzer.beat_detected.connect(_publish_beat)
+	RenderingServer.global_shader_parameter_set(&"audio_event", Vector2.ZERO)
 	_publish_spectrum()
+
+func _publish_beat(strength: float) -> void:
+	# A serial lets fixed-step GPU simulations observe onsets between ticks.
+	# Integers through 65535 are represented exactly in float32.
+	_beat_serial = (_beat_serial + 1) % 65536
+	RenderingServer.global_shader_parameter_set(&"audio_event", Vector2(_beat_serial, strength))
 
 func _publish_spectrum() -> void:
 	# 64 bytes per upload; preserve the ImageTexture RID by calling update().

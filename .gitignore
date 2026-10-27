@@ -1,3 +1,7 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+/native/LoopbackBridge/bin/
+/native/LoopbackBridge/obj/
+/bin/loopback/
+/builds/

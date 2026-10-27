@@ -1,16 +1,33 @@
 # VizMP architecture blueprint
 
+Priority 1 desktop capture is now implemented. See `DESKTOP_LOOPBACK.md` for
+the current file/desktop source routing, PCM API, scene setup and validation.
+Priority 2 is implemented in `scenes/visualizers/ParticleGalaxy.tscn`; see
+`PARTICLE_GALAXY.md` for lifecycle, shaders, audio events and quality presets.
+Priority 3 is implemented in `scripts/ui/`; see `MODULAR_UI_SKINS.md` for
+panel composition, native windows, skin/atlas manifests, and persistence.
+Raymarched tunnel and MultiMesh city are also implemented. See
+`TUNNEL_AND_CITY.md` for scene structure, audio mappings, bounded GPU work,
+quality settings, shockwaves and validation.
+The vector CRT phase scope is implemented with signed stereo PCM, a static
+GPU ribbon, retained HDR phosphor accumulation and CRT post-processing. See
+`OSCILLOSCOPE.md` for routing, scene structure, resource ownership and tests.
+Windows screensaver dispatch, settings, primary fullscreen and exit guards
+are implemented in `scripts/app/ScreensaverManager.gd`; see
+`WINDOWS_SCREENSAVER.md` for packaging, preview limitations and validation.
+The future-module descriptions below remain guidance for later expansion.
+
 ## Data flow and ownership
 
 ```text
 Audio source / future playlist
   -> AudioStreamPlayer -> Master effects -> output device
                             |
-                     AudioAnalyzer (autoload, first)
+                     AudioAnalyzer (autoload, after ScreensaverManager)
                         |             |
                  beat_detected    spectrum_updated
                         |             |
-                  cameras/UI   VisualizerShaderManager (autoload, second)
+                  cameras/UI   VisualizerShaderManager (after StereoPCM)
                                       |
                         global vec4s + 64x1 R8 texture
                                       |
@@ -35,6 +52,7 @@ need per-material parameters instead.
 
 - `audio_bands.x`: bass; `.y`: mid; `.z`: treble; `.w`: volume.
 - `audio_details.x`: sub-bass; `.y`: highs; `.z`: beat envelope; `.w`: reserved.
+- `audio_event.x`: onset serial modulo 65536; `.y`: latest onset strength.
 - `audio_spectrum`: 64×1 R8, each texel an 8-bit display level. Sample at
   `vec2((float(bin) + 0.5) / 64.0, 0.5)`. Quantization is intentional for display;
   use R32F or RG32F if future materials need higher precision or stereo bins.
@@ -106,24 +124,23 @@ settings. Use stable IDs so future migrations can preserve layouts and skins.
 
 ## Screensaver and wallpaper boundaries
 
-`ExecutionModeService` parses both OS.get_cmdline_args() (Windows screensaver
-switches) and OS.get_cmdline_user_args() (arguments after Godot's `--`). Normalize
-case and forms such as `/c`, `/c:HWND`, `/s`, `/p HWND`. `/s` opens a borderless
-fullscreen display and hides UI; `/c` opens configuration. `/p` requires native
-parent-window embedding; until implemented, exit cleanly rather than opening
-an unexpected fullscreen preview.
+`ScreensaverManager` parses OS.get_cmdline_args() and OS.get_cmdline_user_args(),
+normalizing `/c`, `/c:HWND`, `/s` and `/p HWND`. Entry routes to the normal app,
+configuration modal, or isolated saver scene. Preview exits successfully;
+native HWND embedding remains unimplemented. See `WINDOWS_SCREENSAVER.md`.
 
-Arm exit detection after a short startup grace period, remember the initial
-mouse position, accumulate actual displacement beyond a small threshold, and
-exit on intentional mouse/key input. Use a short fade, restore cursor state,
-and quit. Ignore synthetic startup motion and key repeat. Test multi-monitor
-coordinates and DPI scaling before packaging a Windows `.scr` executable.
+Exit detection has a 0.5-second grace period, an eight-pixel net movement
+threshold and a global-position fallback across monitors. Pressed keys/buttons
+quit immediately without a fade. The cursor hides after two idle seconds and
+is restored on exit. The export preset and staging script produce a tested
+Windows `.scr`; actual Windows registration, DPI and idle/resume acceptance
+remain manual installation checks.
 
 A borderless fullscreen window is feasible in Godot. A real desktop wallpaper
 behind icons requires native Windows WorkerW/desktop integration and lifecycle
 handling; a borderless overlay alone is not equivalent. Keep this in a native
-adapter with an explicit normal-window fallback. Screensaver registration,
-startup behavior and native desktop integration are separate packaging work.
+adapter with an explicit normal-window fallback. Wallpaper integration is
+separate from the implemented screensaver mode.
 
 ## Validation strategy
 

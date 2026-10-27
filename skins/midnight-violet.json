@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "name": "Midnight Violet",
+  "colors": {"background":"#100e1c", "panel":"#1c192e", "surface":"#2a2541", "border":"#4b4269", "accent":"#bb9cff", "text":"#eee9ff", "muted":"#a59bbd"}
+}

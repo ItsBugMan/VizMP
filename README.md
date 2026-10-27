@@ -3,6 +3,18 @@
 Godot 4.7 audio visualizer foundation. Open `project.godot` and press **F6**
 with `scenes/Main.tscn` open, or **F5** to launch the configured main scene.
 Choose **Open audio**, or drop an MP3, OGG or WAV onto the application.
+Choose **Live desktop audio** to capture the default Windows output instead.
+See [Desktop loopback setup and validation](docs/DESKTOP_LOOPBACK.md).
+Choose **Particle galaxy** for the GPU-driven 3D mode; see
+[Galaxy scene, shaders and tuning](docs/PARTICLE_GALAXY.md).
+**Fractal tunnel** and **Spectrum city** add raymarched flight and a GPU-driven
+neon skyline; see [Tunnel and city scenes, shaders and tuning](docs/TUNNEL_AND_CITY.md).
+**Vector CRT scope** displays actual stereo X-Y phase with green/amber
+phosphor persistence; see [Oscilloscope scene, PCM routing and tuning](docs/OSCILLOSCOPE.md).
+Windows `.scr` startup, settings, shuffled playback and input exit guards are
+implemented; see [Windows screensaver setup and packaging](docs/WINDOWS_SCREENSAVER.md).
+Panels can be resized, swapped, or detached. Use **Settings / skin** to change
+the theme; see [Modular panels and custom skins](docs/MODULAR_UI_SKINS.md).
 **F11** toggles fullscreen; **Escape** restores windowed mode.
 
 ## Implemented starter
@@ -15,11 +27,13 @@ Choose **Open audio**, or drop an MP3, OGG or WAV onto the application.
 - `shaders/radial_visualizer.gdshader`: aspect-correct, antialiased radial
   spectrum with customizable colors and intensity.
 - `scenes/Main.tscn`, `scripts/app/Main.gd`: runnable host and external audio loading.
+- `scenes/visualizers/`: galaxy, raymarch tunnel, MultiMesh city and vector CRT scope.
 - `docs/ARCHITECTURE.md`: contracts and extension plan for the complete application.
 
 The project's existing Forward+ / D3D12 settings are preserved. Shader globals
 and autoload order are already configured in `project.godot`. No plug-ins,
-third-party packages, imported media, or external assets are required.
+imported media or external assets are required for file mode. Desktop mode
+uses the included WASAPI helper source and its pinned NAudio dependency.
 
 ## Audio contract
 
@@ -36,11 +50,12 @@ own this effect: rebuilding the bus layout while running requires explicit
 rebinding. When mixing output effects, place analysis after your intended
 processing stage; this starter appends it after existing effects.
 
-This analyzes audio played **inside VizMP**. Other desktop apps do not feed
-Godot's Master bus automatically. Windows desktop loopback will need a native
-WASAPI capture integration (or an externally configured loopback input).
-Stereo FFT magnitudes cannot reconstruct phase; an oscilloscope needs PCM
-from a separate `AudioEffectCapture` service.
+File mode analyzes audio played **inside VizMP** through Master. Live desktop
+mode uses AudioLoopbackManager's WASAPI capture and DesktopAnalysis bus.
+Stereo FFT magnitudes cannot reconstruct phase; signed PCM is available from
+`AudioLoopbackManager.pcm_frames` and its `pcm_updated` signal in desktop mode.
+`StereoPCM` provides the shared signed PCM texture and correlation for either
+file playback or desktop audio while the scope is active.
 
 ## Tuning
 
@@ -71,9 +86,10 @@ compilation. Human listening and visual motion review remain useful for tuning.
 
 ## Roadmap boundary
 
-Docking, saved skins, additional 2D/3D modes, PCM phase capture, playlists,
-screensaver command handling and wallpaper integration are architectural
-extension points, not implemented features in this initial audio/shader starter.
+Further 2D/3D modes, persistent playlist libraries and wallpaper integration
+remain extension points. Desktop loopback, GPU galaxy, folded tunnel, spectrum
+city, CRT phase scope, file PCM capture, basic playlists, file EQ, four-slot
+docking, native panel windows, saved skins and Windows screensaver mode are implemented.
 
 ## API references
 

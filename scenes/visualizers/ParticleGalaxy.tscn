@@ -1,0 +1,62 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/visualizers/ParticleGalaxy.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/visualizers/GalaxyCamera.gd" id="2"]
+[ext_resource type="Shader" path="res://shaders/galaxy_process.gdshader" id="3"]
+[ext_resource type="Shader" path="res://shaders/galaxy_star.gdshader" id="4"]
+[ext_resource type="Shader" path="res://shaders/galaxy_core.gdshader" id="5"]
+
+[sub_resource type="Environment" id="Environment"]
+background_mode = 1
+background_color = Color(0.002, 0.004, 0.012, 1)
+tonemap_mode = 3
+glow_enabled = true
+glow_intensity = 0.65
+glow_bloom = 0.05
+glow_hdr_threshold = 1.0
+
+[sub_resource type="ShaderMaterial" id="Process"]
+shader = ExtResource("3")
+
+[sub_resource type="ShaderMaterial" id="StarMaterial"]
+shader = ExtResource("4")
+
+[sub_resource type="QuadMesh" id="StarQuad"]
+material = SubResource("StarMaterial")
+size = Vector2(1, 1)
+
+[sub_resource type="ShaderMaterial" id="CoreMaterial"]
+shader = ExtResource("5")
+
+[sub_resource type="QuadMesh" id="CoreQuad"]
+material = SubResource("CoreMaterial")
+size = Vector2(6, 6)
+
+[node name="ParticleGalaxy" type="Node3D"]
+script = ExtResource("1")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+current = true
+near = 0.1
+far = 100.0
+fov = 58.0
+script = ExtResource("2")
+
+[node name="Stars" type="GPUParticles3D" parent="."]
+cast_shadow = 0
+amount = 32768
+lifetime = 10.0
+preprocess = 3.0
+visibility_aabb = AABB(-25, -5, -25, 50, 10, 50)
+local_coords = true
+fixed_fps = 60
+interpolate = true
+process_material = SubResource("Process")
+draw_pass_1 = SubResource("StarQuad")
+
+[node name="Core" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+mesh = SubResource("CoreQuad")

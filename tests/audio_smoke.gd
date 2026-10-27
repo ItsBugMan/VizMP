@@ -53,6 +53,10 @@ func _run() -> void:
 	_check(analyzer.bass > 0.1, "220 Hz audio reaches bass band through Master FFT")
 	_check(analyzer.bass > analyzer.highs, "Bass tone exceeds high-frequency energy")
 	player.stop()
+	player.stream = null
+	stream = null
 	player.queue_free()
+	# Let the audio mixer retire its last playback reference before teardown.
+	await create_timer(0.1).timeout
 	print("Failures: ", _failures)
 	quit(0 if _failures == 0 else 1)

@@ -1,0 +1,47 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/app/Screensaver.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/visualizers/VisualizerHost.gd" id="2"]
+[ext_resource type="Shader" path="res://shaders/radial_visualizer.gdshader" id="3"]
+
+[sub_resource type="ShaderMaterial" id="RadialMaterial"]
+shader = ExtResource("3")
+
+[node name="Screensaver" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Visualizer" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2")
+
+[node name="Radial" type="ColorRect" parent="Visualizer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+material = SubResource("RadialMaterial")
+
+[node name="Player" type="AudioStreamPlayer" parent="."]
+bus = &"Master"
+
+[node name="Status" type="Label" parent="."]
+visible = false
+offset_left = 20.0
+offset_top = 20.0
+mouse_filter = 2
+theme_override_font_sizes/font_size = 14

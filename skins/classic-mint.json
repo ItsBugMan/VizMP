@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "name": "Classic Mint",
+  "colors": {"background":"#10191c", "panel":"#17252a", "surface":"#22343b", "border":"#3b535a", "accent":"#75e5b7", "text":"#e0f0e9", "muted":"#8aaba4"}
+}
