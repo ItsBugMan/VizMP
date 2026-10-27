@@ -1,0 +1,76 @@
+{
+  "tool": "OpenAI image_gen (built-in)",
+  "approval": "All five object-themed previews approved by the user before production generation and implementation.",
+  "assets": [
+    {
+      "key": "gt-velocity",
+      "type": "art",
+      "reference": "gt-velocity.png",
+      "prompt": "Create production ART ASSET faithfully based on this approved VizMP skin concept. Extract and recreate ONLY the large decorative hero object. Remove every UI panel, all screens, text, logos, buttons, sliders, playlist and equalizer. No UI remnants anywhere. Transparent background, clean alpha edges, no gray rectangle or desktop background. Landscape format, highest available detail, target 2048x1365. Photorealistic premium 2000s skin craftsmanship exactly matching the reference materials. The spectacular midnight-blue supercar, front three-quarter view with illuminated icy headlights, machined wheels and wide low body. Remove visible real-brand badges: original fictional car. Keep blue/chrome/carbon materials and amber accent lights. Entire car and shadow fit in a landscape composition."
+    },
+    {
+      "key": "gt-velocity",
+      "type": "panel",
+      "reference": "gt-velocity.png",
+      "prompt": "Create production GAME UI FRAME TEXTURE from the approved VizMP concept, exactly ONE EMPTY rectangular player-panel frame, landscape 3:2, orthographic. No hero object, characters, text, logos, icons, controls, sliders or buttons. Center 75% width and 70% height is uniform dark smoked glass, completely empty for real live controls. Entire frame uncropped, near canvas edges, transparent exterior. Rich material faithfully matches the reference. Corners confined to outer 18% edges for nine-slice scaling; straight edges simple and stretchable. Highest available resolution. Brushed silver and midnight-blue anodized metal, carbon-fiber inset, honeycomb vent accents, orange light rails, sharp aerodynamic chamfered corners."
+    },
+    {
+      "key": "blacksite",
+      "type": "art",
+      "reference": "blacksite.png",
+      "prompt": "Create production ART ASSET faithfully based on this approved VizMP skin concept. Extract and recreate ONLY the large decorative hero object. Remove every UI panel, all screens, text, logos, buttons, sliders, playlist and equalizer. No UI remnants anywhere. Transparent background, clean alpha edges, no gray rectangle or desktop background. Landscape format, highest available detail, target 2048x1365. Photorealistic premium 2000s skin craftsmanship exactly matching the reference materials. The decorative fictional science-fiction blaster and its surrounding olive/brass/gunmetal housing, sling and sculptural mechanical armor. It is a nonfunctional fantasy illustration. Horizontal wide weapon fully inside landscape canvas, fine worn anodized metal and warm amber emissive details. No real-brand marks or technical schematics."
+    },
+    {
+      "key": "blacksite",
+      "type": "panel",
+      "reference": "blacksite.png",
+      "prompt": "Create production GAME UI FRAME TEXTURE from the approved VizMP concept, exactly ONE EMPTY rectangular player-panel frame, landscape 3:2, orthographic. No hero object, characters, text, logos, icons, controls, sliders or buttons. Center 75% width and 70% height is uniform dark smoked glass, completely empty for real live controls. Entire frame uncropped, near canvas edges, transparent exterior. Rich material faithfully matches the reference. Corners confined to outer 18% edges for nine-slice scaling; straight edges simple and stretchable. Highest available resolution. Graphite gunmetal, olive ceramic, antique brass machined bevels, bolt heads, shallow vents, amber glowing edge inserts, angular armored corners."
+    },
+    {
+      "key": "orbital-eva",
+      "type": "art",
+      "reference": "orbital-eva.png",
+      "prompt": "Create production ART ASSET faithfully based on this approved VizMP skin concept. Extract and recreate ONLY the large decorative hero object. Remove every UI panel, all screens, text, logos, buttons, sliders, playlist and equalizer. No UI remnants anywhere. Transparent background, clean alpha edges, no gray rectangle or desktop background. Landscape format, highest available detail, target 2048x1365. Photorealistic premium 2000s skin craftsmanship exactly matching the reference materials. The astronaut helmet and shoulder upper body, pearl white ceramic shell, titanium seals, bright orange latches, gold foil, dark gold visor reflecting orbital Earth and stars. A large hero helmet takes most of a landscape composition, framing curve of Earth behind it as an integral decorative ornament. No brands or patches, no text."
+    },
+    {
+      "key": "orbital-eva",
+      "type": "panel",
+      "reference": "orbital-eva.png",
+      "prompt": "Create production GAME UI FRAME TEXTURE from the approved VizMP concept, exactly ONE EMPTY rectangular player-panel frame, landscape 3:2, orthographic. No hero object, characters, text, logos, icons, controls, sliders or buttons. Center 75% width and 70% height is uniform dark smoked glass, completely empty for real live controls. Entire frame uncropped, near canvas edges, transparent exterior. Rich material faithfully matches the reference. Corners confined to outer 18% edges for nine-slice scaling; straight edges simple and stretchable. Highest available resolution. Pearl white aerospace ceramic, titanium seals and rivets, orange safety clasps, gold foil accents, smoked dark glass center and thin pale-cyan light rail, rounded engineered corners."
+    },
+    {
+      "key": "sentinel",
+      "type": "art",
+      "reference": "sentinel.png",
+      "prompt": "Create production ART ASSET faithfully based on this approved VizMP skin concept. Extract and recreate ONLY the large decorative hero object. Remove every UI panel, all screens, text, logos, buttons, sliders, playlist and equalizer. No UI remnants anywhere. Transparent background, clean alpha edges, no gray rectangle or desktop background. Landscape format, highest available detail, target 2048x1365. Photorealistic premium 2000s skin craftsmanship exactly matching the reference materials. The imposing original robot head, titanium cheek armor, cobalt-blue inset plates, cyan eyes, copper wiring and finely machined edges. Full head and top of shoulders uncropped, huge broad face in landscape composition. No logos or text. Keep the powerful mechanical facial silhouette and tiny manufacturing details."
+    },
+    {
+      "key": "sentinel",
+      "type": "panel",
+      "reference": "sentinel.png",
+      "prompt": "Create production GAME UI FRAME TEXTURE from the approved VizMP concept, exactly ONE EMPTY rectangular player-panel frame, landscape 3:2, orthographic. No hero object, characters, text, logos, icons, controls, sliders or buttons. Center 75% width and 70% height is uniform dark smoked glass, completely empty for real live controls. Entire frame uncropped, near canvas edges, transparent exterior. Rich material faithfully matches the reference. Corners confined to outer 18% edges for nine-slice scaling; straight edges simple and stretchable. Highest available resolution. Brushed titanium gunmetal and cobalt-blue plates, cyan slim light rails, copper exposed wiring ornament at corners, sharp industrial bevels and hexagonal vent details."
+    },
+    {
+      "key": "xeno-pod",
+      "type": "art",
+      "reference": "xeno-pod.png",
+      "prompt": "Create production ART ASSET faithfully based on this approved VizMP skin concept. Extract and recreate ONLY the large decorative hero object. Remove every UI panel, all screens, text, logos, buttons, sliders, playlist and equalizer. No UI remnants anywhere. Transparent background, clean alpha edges, no gray rectangle or desktop background. Landscape format, highest available detail, target 2048x1365. Photorealistic premium 2000s skin craftsmanship exactly matching the reference materials. The beautiful alien biomechanical pod sculpture, pearlescent petrol-black shell, iridescent violet surfaces, luminous orange organic orb with flowing filaments, graceful tendrils and asymmetrical negative spaces. Pod flows horizontally across landscape canvas, richly detailed glossy surreal product, non-gory. No music player screen or controls."
+    },
+    {
+      "key": "xeno-pod",
+      "type": "panel",
+      "reference": "xeno-pod.png",
+      "prompt": "Create production GAME UI FRAME TEXTURE from the approved VizMP concept, exactly ONE EMPTY rectangular player-panel frame, landscape 3:2, orthographic. No hero object, characters, text, logos, icons, controls, sliders or buttons. Center 75% width and 70% height is uniform dark smoked glass, completely empty for real live controls. Entire frame uncropped, near canvas edges, transparent exterior. Rich material faithfully matches the reference. Corners confined to outer 18% edges for nine-slice scaling; straight edges simple and stretchable. Highest available resolution. Organic irregular biomechanical flowing frame, pearlescent petrol-black shell, iridescent violet edges, warm orange bioluminescent seams, sculptural rounded tendril corners with asymmetrical cutouts."
+    }
+  ],
+  "refinements": [
+    {
+      "description": "Final art-only refinement removed the empty UI frame and retained the fictional weapon with a transparent background.",
+      "key": "blacksite"
+    },
+    {
+      "description": "Final art-only refinement removed empty UI panel holes and retained the alien orb and shell with a transparent background.",
+      "key": "xeno-pod"
+    }
+  ]
+}

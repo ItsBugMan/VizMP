@@ -58,6 +58,8 @@ jobs:
           $godot = (Get-ChildItem builds/tools/godot -Filter '*console.exe').FullName
           & $godot --headless --path . --editor --quit
           if ($LASTEXITCODE -ne 0) { throw 'Godot import failed' }
+          & $godot --headless --path . --script res://tests/skin_assets_smoke.gd
+          if ($LASTEXITCODE -ne 0) { throw 'Skin asset and migration tests failed' }
           & $godot --headless --path . --script res://tests/audio_smoke.gd
           if ($LASTEXITCODE -ne 0) { throw 'Audio tests failed' }
           & $godot --headless --path . --script res://tests/flac_smoke.gd

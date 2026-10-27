@@ -10,17 +10,30 @@ already playing on your desktop, or let a visualizer take over the screen.
  · [View releases](https://github.com/ItsBugMan/VizMP/releases)
  · [Report an issue](https://github.com/ItsBugMan/VizMP/issues)
 
-## New in 1.1.0
+## New in 1.2.0
 
-**[Reactive Expansion release notes](https://github.com/ItsBugMan/VizMP/releases/tag/v1.1.0)**
+**[Illustrated Skins & Face Clarity release notes](https://github.com/ItsBugMan/VizMP/releases/tag/v1.2.0)**
 
-Lightning Storm and ASCII Face Rain join the collection, alongside eight new
-retro skins. This update fixes audio reactivity lost when the equalizer changed
-the audio chain, steadies the fractal camera and geometry, and adds a 0–8×
-sensitivity control. The player now opens with the visualizer hidden to give
-the deck more room; restore it in **Visualizer settings…** or press **F11**.
+Eight approved skin redesigns bring detailed character and object artwork,
+ornamental frames, and dedicated player layouts: **Nocturne**, **Redline**,
+**Aurora**, **GT Velocity**, **Blacksite**, **Orbital EVA**, **Sentinel**, and
+**Xeno Pod**. Playback, playlist and equalizer controls remain live. **VIS** opens
+a separate visualizer window; **Library** opens the media library.
 
-![ASCII Face Rain: green falling character lights reveal an original portrait against black](docs/images/ascii-face-rain.png)
+**Borderless windowed mode:** press **F10**, or open **Settings / skin → Player /
+visualizer settings… → Borderless windowed player**. Drag the top rail, use its
+minimize/maximize/close buttons, or resize from the bottom-right grip. F11 still
+opens the visualizer fullscreen and restores your previous player state on exit.
+
+ASCII Face Rain now uses denser overlapping streams and luminance-matched
+characters. Eyes and contours remain visible with quiet or narrow-band audio,
+brightness stays bounded, and silence clears every RGB pixel.
+
+![Nocturne: actual 2K player capture with live Godot controls](docs/images/nocturne-player.png)
+
+![ASCII Face Rain: denser characters preserve the portrait's eyes and contours](docs/images/ascii-face-rain.png)
+
+See [skin details, window controls and validation](docs/ILLUSTRATED_SKINS.md).
 
 ## Pick your view
 
@@ -36,7 +49,7 @@ Switch between seven visualizers, each with its own way of responding to your au
 
 Choose **Low**, **Balanced** or **High** quality, toggle camera motion in supported
 modes, and press **F11** when you want the visuals to fill the screen.
-The visualizer starts minimized. Open **Settings / skin → Visualizer settings…**
+The visualizer starts minimized. Open **Settings / skin → Player / visualizer settings…**
 and check **Enable Visualizer Viewport** to restore it. This modal also includes
 an audio sensitivity slider (0–8×). F11 opens the visualizer directly; Esc returns
 to the previous deck state. Hidden visualizers suspend rendering and processing.
@@ -66,15 +79,23 @@ Move the player, equalizer, visualizer, playlist and library into the arrangemen
 that suits you. Resize panels, swap their positions or detach them into separate
 windows. VizMP remembers your layout.
 
-The original six skins are **Classic Mint**, **Midnight Violet**,
-**Amber Terminal**, **Cyberpunk**, **Brushed Metal** and **Retro Phosphor**.
-The eight retro expansion packages are **Y2K Chrome**, **Neon Ronin** (anime),
-**V12 Redline** (cars), **Arsenal Titanium** (guns), **Velvet Muse** (women),
-**Orbital EVA** (astronauts), **Sentinel Head** (robots), and **Xeno Pod**.
-They add original vector artwork, brushed or moulded surface shaders, shaped
-panel frames, transport glyphs, and LCD readouts across floating sub-windows.
-That brings the collection to **14 skins**. Custom JSON and texture-atlas skins
-are supported too.
+The illustrated collection contains **Nocturne** (neon gothic), **Redline**
+(racing anime), **Aurora** (celestial fantasy), **GT Velocity** (supercar),
+**Blacksite** (sci-fi armory), **Orbital EVA** (astronaut), **Sentinel** (robot),
+and **Xeno Pod** (alien biomechanical sculpture). Every design was previewed and
+approved before implementation. Track text, buttons and sliders are native Godot
+controls over separate illustrations and frames. Layouts were checked from
+1000×800 through 3840×2160; source artwork dimensions are documented in the
+[skin notes](docs/ILLUSTRATED_SKINS.md).
+
+The six classic color themes—**Classic Mint**, **Midnight Violet**,
+**Amber Terminal**, **Cyberpunk**, **Brushed Metal** and **Retro Phosphor**—remain,
+for **14 selectable skins**. Known prototype selections migrate to their
+redesigned counterparts. Custom JSON and texture-atlas skins remain supported.
+
+Illustrated skins use fixed responsive compositions with detachable panels and
+separately saved floating-window positions. Classic themes retain the adjustable
+split layout. [Browse the implemented skin screenshots](docs/ILLUSTRATED_SKINS.md#screenshots).
 
 ![VizMP's dockable player layout with transport controls, equalizer, Particle Galaxy, playlist and media library](docs/images/vizmp-player.png)
 
@@ -93,7 +114,7 @@ current Windows preview limitations.
 1. Open the **[latest release](https://github.com/ItsBugMan/VizMP/releases/latest)**.
 2. Choose the **installer** for setup and shortcuts, or the **portable ZIP** to run from a folder. Extract the complete ZIP and keep its DLL and helper folders together.
 3. Launch **VizMP.exe**. Choose **Open audio**, drop in a track, or start audio in another app and enable **Live desktop audio**.
-4. Open **Settings / skin → Visualizer settings…**, check **Enable Visualizer Viewport**, then pick a mode and skin. Press **F11** for fullscreen.
+4. Open **Settings / skin → Player / visualizer settings…**, check **Enable Visualizer Viewport**, then pick a mode and skin. Press **F11** for fullscreen.
 
 **F11** toggles fullscreen. **Escape** or a left click returns from visualizer
 fullscreen. Use **↗** on a panel to detach it, and **Settings / skin → Reset panel
@@ -118,7 +139,9 @@ for measured performance and remaining limitations.
 
 Created by **[ItsBugMan](https://github.com/ItsBugMan)**, with development assistance from OpenAI Codex.
 The ASCII mode includes an original fictional portrait generated with OpenAI's
-image generation tool. The expansion skin artwork is original editable vector art.
+image generation tool. The illustrated skins use original AI-generated character and frame assets,
+with native Godot controls and scalable button artwork. Source sizes and design
+briefs are recorded in [the skin notes](docs/ILLUSTRATED_SKINS.md).
 
 VizMP is built with the work of these projects and their contributors:
 

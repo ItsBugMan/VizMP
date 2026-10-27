@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "name": "Sentinel",
+  "colors": {
+    "background": "#080f19",
+    "panel": "#101c2a",
+    "surface": "#253b4f",
+    "border": "#91afc5",
+    "accent": "#47cfff",
+    "text": "#e4f4ff",
+    "muted": "#98b4c6"
+  },
+  "atlas": "sentinel-frame.svg",
+  "regions": {
+    "panel": [
+      0,
+      0,
+      160,
+      160
+    ],
+    "button_normal": [
+      160,
+      0,
+      80,
+      80
+    ],
+    "button_hover": [
+      160,
+      80,
+      80,
+      80
+    ]
+  },
+  "margins": [
+    24,
+    24,
+    24,
+    24
+  ],
+  "chrome": {
+    "surface": "metal",
+    "artwork": "../assets/skins/sentinel.png",
+    "panel_artwork": "../assets/skins/sentinel-panel.png",
+    "glyphs": [
+      "|\u25c0",
+      "\u25b6",
+      "\u2161",
+      "\u25b6|"
+    ],
+    "layout": "sentinel",
+    "art_side": "hero"
+  }
+}

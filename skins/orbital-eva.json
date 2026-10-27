@@ -1,38 +1,53 @@
 {
   "version": 1,
-  "name": "Orbital EVA / Astronauts",
+  "name": "Orbital EVA",
   "colors": {
-    "background": "#0e0f14",
-    "panel": "#363537",
-    "surface": "#514f50",
-    "border": "#968579",
-    "accent": "#ffa761",
-    "text": "#e6e7e5",
-    "muted": "#a6a5a3"
+    "background": "#091219",
+    "panel": "#11232c",
+    "surface": "#25414b",
+    "border": "#c9d8de",
+    "accent": "#9be9f2",
+    "text": "#edfaff",
+    "muted": "#a6c0c8"
   },
-  "atlas": "orbital-eva.svg",
+  "atlas": "orbital-eva-frame.svg",
   "regions": {
     "panel": [
       0,
       0,
-      96,
-      96
+      160,
+      160
+    ],
+    "button_normal": [
+      160,
+      0,
+      80,
+      80
+    ],
+    "button_hover": [
+      160,
+      80,
+      80,
+      80
     ]
   },
   "margins": [
-    20,
-    20,
-    20,
-    20
+    24,
+    24,
+    24,
+    24
   ],
   "chrome": {
     "surface": "metal",
-    "artwork": "orbital-eva-art.svg",
+    "artwork": "../assets/skins/orbital-eva.png",
+    "panel_artwork": "../assets/skins/orbital-eva-panel.png",
     "glyphs": [
-      "|\u25c1",
-      "\u25b7",
+      "|\u25c0",
+      "\u25b6",
       "\u2161",
-      "\u25b7|"
-    ]
+      "\u25b6|"
+    ],
+    "layout": "orbital-eva",
+    "art_side": "hero"
   }
 }

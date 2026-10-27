@@ -50,6 +50,10 @@ foreach ($export in @(@('Windows Desktop','VizMP.exe'), @('Windows Screensaver',
 Copy-Item -LiteralPath (Join-Path $projectRoot 'version.cfg') -Destination $stage
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'RunScreensaver.ps1') -Destination $stage
 Copy-Item -LiteralPath (Join-Path $projectRoot 'skins') -Destination $stage -Recurse
+# External copies of the new skin manifests also resolve their artwork.
+$skinAssets = Join-Path $stage 'assets'
+New-Item -ItemType Directory -Path $skinAssets -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $projectRoot 'assets/skins') -Destination $skinAssets -Recurse
 $notices = Join-Path $stage 'licenses/xiph_audio'
 New-Item -ItemType Directory -Path $notices -Force | Out-Null
 foreach ($notice in @('LICENSE.md', 'THIRD_PARTY_NOTICES.md')) {

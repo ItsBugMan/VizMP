@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "name": "Aurora",
+  "colors": {
+    "background": "#071a1d",
+    "panel": "#0d252b",
+    "surface": "#173a40",
+    "border": "#c4aa70",
+    "accent": "#79e3d4",
+    "text": "#fcf5df",
+    "muted": "#b9c8c5"
+  },
+  "atlas": "aurora-frame.svg",
+  "regions": {
+    "panel": [
+      0,
+      0,
+      160,
+      160
+    ],
+    "button_normal": [
+      160,
+      0,
+      80,
+      80
+    ],
+    "button_hover": [
+      160,
+      80,
+      80,
+      80
+    ]
+  },
+  "margins": [
+    24,
+    24,
+    24,
+    24
+  ],
+  "chrome": {
+    "surface": "metal",
+    "artwork": "../assets/skins/aurora.png",
+    "glyphs": [
+      "|\u25c0",
+      "\u25b6",
+      "\u2161",
+      "\u25b6|"
+    ],
+    "layout": "aurora",
+    "art_side": "left",
+    "panel_artwork": "../assets/skins/aurora-panel.png"
+  }
+}

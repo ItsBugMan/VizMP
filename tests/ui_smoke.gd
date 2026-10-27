@@ -60,7 +60,7 @@ func _run() -> void:
 	var window: Window = layout.windows.equalizer
 	_check(window.borderless and window.visible and not window.is_embedded(), "Undocked panel opens a real borderless OS window")
 	_check(eq.get_window() == window and _eq_count() == 1, "Undocking preserves panel state and audio effect")
-	skins.load_skin(skins.BUILTINS[1], false)
+	skins.load_skin("res://skins/midnight-violet.json", false)
 	_check(window.theme == skins.active_theme, "Live skin updates reach detached windows")
 	layout.layout_path = "res://.godot/ui-test-layout.cfg"
 	layout.persistence_enabled = true
@@ -85,7 +85,7 @@ func _run() -> void:
 	bitmap.fill(Color("#334455"))
 	bitmap.fill_rect(Rect2i(4, 4, 16, 16), Color("#152535"))
 	bitmap.save_png("res://.godot/ui-test-atlas.png")
-	var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(skins.BUILTINS[0]))
+	var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://skins/classic-mint.json"))
 	manifest.atlas = "ui-test-atlas.png"
 	manifest.regions = {"panel": [0, 0, 24, 24], "button_normal": [0, 0, 24, 24]}
 	manifest.margins = [4, 4, 4, 4]
@@ -100,7 +100,7 @@ func _run() -> void:
 	file.store_string(JSON.stringify(manifest))
 	file.close()
 	_check(skins.load_skin("res://.godot/ui-test-skin.json", false) != OK and skins.active_theme == good_theme, "Invalid atlas margins preserve the active skin")
-	skins.load_skin(skins.BUILTINS[0], false)
+	skins.load_skin("res://skins/classic-mint.json", false)
 	main._visualizer_host.set_mode(1)
 	main._visual_mode.select(1)
 	var analyzer: Node = root.get_node("AudioAnalyzer")

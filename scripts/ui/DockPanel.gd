@@ -39,8 +39,32 @@ func setup(id: String, title: String) -> void:
 	content = VBoxContainer.new()
 	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	column.add_child(content)
+	SkinManager.skin_changed.connect(_refresh_header)
+	_refresh_header.call_deferred()
+	resized.connect(queue_redraw)
 
 func update_location(slot: int, detached: bool) -> void:
 	_slot_menu.select(slot)
 	_detach.text = "↙" if detached else "↗"
 	_detach.tooltip_text = "Return to dock" if detached else "Detach into a borderless window"
+
+func _refresh_header() -> void:
+	_slot_menu.visible = not SkinManager.chrome.has("layout")
+	if SkinManager.illustrated_panel != null:
+		var padding := StyleBoxEmpty.new()
+		padding.content_margin_left = 36
+		padding.content_margin_right = 36
+		padding.content_margin_top = 38
+		padding.content_margin_bottom = 38
+		add_theme_stylebox_override("panel", padding)
+	else:
+		remove_theme_stylebox_override("panel")
+	queue_redraw()
+
+func _draw() -> void:
+	if SkinManager.illustrated_panel == null: return
+	# Scale the nine-slice draw, not the source bitmap: corner detail stays crisp.
+	const FRAME_SCALE: float = 0.15
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE * FRAME_SCALE)
+	draw_style_box(SkinManager.illustrated_panel, Rect2(Vector2.ZERO, size / FRAME_SCALE))
+	draw_set_transform(Vector2.ZERO)

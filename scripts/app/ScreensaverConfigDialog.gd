@@ -36,9 +36,10 @@ func _ready() -> void:
 	_skin = _option(column, "Screensaver skin", [])
 	for path in SkinManager.BUILTINS:
 		_add_skin(path)
-	_add_skin(settings.skin)
+	var preferred_skin: String = SkinManager.REPLACEMENTS.get(settings.skin, settings.skin)
+	_add_skin(preferred_skin)
 	_add_skin(_original_skin)
-	_skin.select(_skin_paths.find(settings.skin))
+	_skin.select(_skin_paths.find(preferred_skin))
 	_skin.item_selected.connect(_preview_skin)
 	var custom := Button.new()
 	custom.text = "Choose custom skin…"

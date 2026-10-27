@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "name": "Blacksite",
+  "colors": {
+    "background": "#12120e",
+    "panel": "#1d1e19",
+    "surface": "#36362b",
+    "border": "#95805d",
+    "accent": "#ffba52",
+    "text": "#f1e6ce",
+    "muted": "#b6aa8e"
+  },
+  "atlas": "blacksite-frame.svg",
+  "regions": {
+    "panel": [
+      0,
+      0,
+      160,
+      160
+    ],
+    "button_normal": [
+      160,
+      0,
+      80,
+      80
+    ],
+    "button_hover": [
+      160,
+      80,
+      80,
+      80
+    ]
+  },
+  "margins": [
+    24,
+    24,
+    24,
+    24
+  ],
+  "chrome": {
+    "surface": "metal",
+    "artwork": "../assets/skins/blacksite.png",
+    "panel_artwork": "../assets/skins/blacksite-panel.png",
+    "glyphs": [
+      "|\u25c0",
+      "\u25b6",
+      "\u2161",
+      "\u25b6|"
+    ],
+    "layout": "blacksite",
+    "art_side": "hero"
+  }
+}

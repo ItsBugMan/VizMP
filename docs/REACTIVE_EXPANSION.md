@@ -1,5 +1,10 @@
 # Reactive visualizers and retro skin expansion
 
+This document records the 1.1.0 expansion. Version 1.2.0 replaces its eight
+prototype themed skins and removes their vector-art generator. See
+[Illustrated skins and clarity update](ILLUSTRATED_SKINS.md) for the current
+skin collection, ASCII rendering changes and window controls.
+
 ## Controls
 
 The deck starts with its visualizer hidden. Settings / skin → Visualizer

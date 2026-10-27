@@ -1,11 +1,12 @@
 extends Control
 ## One full-screen pass; a static glyph atlas replaces thousands of Labels.
-const GLYPHS: String = "0123456789ABCDEF"
+const GLYPHS: String = " .,:;i1tfLCG08@#"
 var _material: ShaderMaterial
 var _atlas: SubViewport
 var _time: float = 0.0
 var _energy: float = 0.0
 var _motion: bool = true
+var _quality: int = 1
 
 func _ready() -> void:
 	_atlas = SubViewport.new()
@@ -16,6 +17,7 @@ func _ready() -> void:
 	add_child(_atlas)
 	var font := SystemFont.new()
 	font.font_names = PackedStringArray(["Consolas", "Cascadia Mono", "DejaVu Sans Mono"])
+	font.font_weight = 600
 	for i in range(GLYPHS.length()):
 		var label := Label.new()
 		label.text = GLYPHS[i]
@@ -37,7 +39,7 @@ func _ready() -> void:
 	add_child(rain)
 
 func set_quality(index: int) -> void:
-	_material.set_shader_parameter(&"columns", [80.0, 112.0, 144.0][clampi(index, 0, 2)])
+	_quality = clampi(index, 0, 2)
 
 func set_camera_motion(enabled: bool) -> void:
 	_motion = enabled
@@ -50,3 +52,4 @@ func _process(delta: float) -> void:
 	_material.set_shader_parameter(&"energy", _energy)
 	_material.set_shader_parameter(&"signal_active", active)
 	_material.set_shader_parameter(&"aspect", size.x / maxf(size.y, 1.0))
+	_material.set_shader_parameter(&"columns", clampf([160.0, 240.0, 320.0][_quality] * maxf(size.y / 1080.0, 0.65), 48.0, minf(720.0, maxf(48.0, size.x / 4.0))))

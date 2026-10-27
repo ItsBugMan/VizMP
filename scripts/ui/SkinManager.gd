@@ -2,7 +2,15 @@ extends Node
 ## Validated data-only skin manifests. One shared Theme per application skin.
 
 signal skin_changed
-const BUILTINS: Array[String] = ["res://skins/classic-mint.json", "res://skins/midnight-violet.json", "res://skins/amber-terminal.json", "res://skins/cyberpunk.json", "res://skins/brushed-metal.json", "res://skins/retro-phosphor.json", "res://skins/y2k-chrome.json", "res://skins/neon-ronin.json", "res://skins/v12-redline.json", "res://skins/arsenal-titanium.json", "res://skins/velvet-muse.json", "res://skins/orbital-eva.json", "res://skins/sentinel-head.json", "res://skins/xeno-pod.json"]
+const BUILTINS: Array[String] = ["res://skins/nocturne.json", "res://skins/redline.json", "res://skins/aurora.json", "res://skins/gt-velocity.json", "res://skins/blacksite.json", "res://skins/orbital-eva.json", "res://skins/sentinel.json", "res://skins/xeno-pod.json", "res://skins/classic-mint.json", "res://skins/midnight-violet.json", "res://skins/amber-terminal.json", "res://skins/cyberpunk.json", "res://skins/brushed-metal.json", "res://skins/retro-phosphor.json"]
+const REPLACEMENTS: Dictionary = {
+	"res://skins/neon-ronin.json": "res://skins/redline.json",
+	"res://skins/y2k-chrome.json": "res://skins/nocturne.json",
+	"res://skins/v12-redline.json": "res://skins/gt-velocity.json",
+	"res://skins/arsenal-titanium.json": "res://skins/blacksite.json",
+	"res://skins/velvet-muse.json": "res://skins/nocturne.json",
+	"res://skins/sentinel-head.json": "res://skins/sentinel.json"
+}
 const SETTINGS_PATH: String = "user://skin.cfg"
 var current_path: String = ""
 var skin_name: String = ""
@@ -11,8 +19,10 @@ var background_color := Color("#10191c")
 var last_error: String = ""
 var chrome: Dictionary = {}
 var artwork: Texture2D
+var illustrated_panel: StyleBoxTexture
 var accent_color := Color("#85d9ff")
 var _roots: Array[WeakRef] = []
+var _interface_font: SystemFont
 
 func _ready() -> void:
 	var config := ConfigFile.new()
@@ -37,6 +47,8 @@ func unregister_root(root: Node) -> void:
 			_roots.remove_at(i)
 
 func load_skin(path: String, persist: bool = true) -> Error:
+	# Apply aliases to every caller, including saved screensaver selections.
+	path = REPLACEMENTS.get(path, path)
 	last_error = ""
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null or file.get_length() > 262144:
@@ -55,6 +67,7 @@ func load_skin(path: String, persist: bool = true) -> Error:
 	if not next_chrome is Dictionary:
 		return _reject("Skin chrome must be an object.")
 	var next_artwork: Texture2D
+	var next_panel: StyleBoxTexture
 	if not next_chrome.is_empty():
 		if not next_chrome.get("surface") in ["metal", "plastic", "mech"]:
 			return _reject("Chrome surface must be metal, plastic or mech.")
@@ -69,11 +82,23 @@ func load_skin(path: String, persist: bool = true) -> Error:
 		for glyph in glyphs:
 			if not glyph is String or glyph.length() > 12:
 				return _reject("Invalid transport glyph.")
+	if next_chrome.has("layout"):
+		if not next_chrome.layout in ["nocturne", "redline", "aurora", "gt-velocity", "blacksite", "orbital-eva", "sentinel", "xeno-pod"] or not next_chrome.get("panel_artwork") is String:
+			return _reject("Illustrated skin requires a supported layout and panel artwork.")
+		var frame: Texture2D = _load_texture(path.get_base_dir().path_join(next_chrome.panel_artwork))
+		if frame == null: return _reject("Illustrated panel artwork is missing.")
+		next_panel = StyleBoxTexture.new()
+		next_panel.texture = frame
+		next_panel.texture_margin_left = frame.get_width() * 0.18
+		next_panel.texture_margin_right = frame.get_width() * 0.18
+		next_panel.texture_margin_top = frame.get_height() * 0.22
+		next_panel.texture_margin_bottom = frame.get_height() * 0.22
 	var theme := Theme.new()
 	theme.default_font_size = 14
-	var font := SystemFont.new()
-	font.font_names = PackedStringArray(["Consolas", "Cascadia Mono"]) if data.name == "Retro Phosphor" or not next_chrome.is_empty() else PackedStringArray(["Segoe UI", "Noto Sans"])
-	theme.default_font = font
+	if _interface_font == null:
+		_interface_font = SystemFont.new()
+		_interface_font.font_names = PackedStringArray(["Segoe UI", "Noto Sans"])
+	theme.default_font = _interface_font
 	theme.set_type_variation(&"LCDReadout", &"Label")
 	theme.set_color("font_color", "LCDReadout", Color(colors.accent))
 	theme.set_font_size("font_size", "LCDReadout", 18)
@@ -154,6 +179,7 @@ func load_skin(path: String, persist: bool = true) -> Error:
 	active_theme = theme
 	chrome = next_chrome.duplicate(true)
 	artwork = next_artwork
+	illustrated_panel = next_panel
 	accent_color = Color(colors.accent)
 	background_color = Color(colors.background)
 	current_path = path
@@ -172,6 +198,7 @@ func load_skin(path: String, persist: bool = true) -> Error:
 	return OK
 
 func display_name(path: String) -> String:
+	path = REPLACEMENTS.get(path, path)
 	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	return str(data.get("name", path.get_file().get_basename())) if data is Dictionary else path.get_file().get_basename()
 
@@ -202,7 +229,7 @@ func _textured(texture: Texture2D, region: Array, margins: Array) -> StyleBoxTex
 	style.region_rect = Rect2(region[0], region[1], region[2], region[3])
 	for side in range(4):
 		style.set_texture_margin(side, margins[side])
-	style.set_content_margin_all(10)
+	style.set_content_margin_all(18 if region[2] >= 160 else 10)
 	return style
 
 func _numbers(value: Variant, count: int) -> bool:

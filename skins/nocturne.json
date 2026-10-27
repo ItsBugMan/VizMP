@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "name": "Nocturne",
+  "colors": {
+    "background": "#0c0913",
+    "panel": "#15121e",
+    "surface": "#262130",
+    "border": "#86758d",
+    "accent": "#d878ff",
+    "text": "#f4ecfa",
+    "muted": "#aa9ab3"
+  },
+  "atlas": "nocturne-frame.svg",
+  "regions": {
+    "panel": [
+      0,
+      0,
+      160,
+      160
+    ],
+    "button_normal": [
+      160,
+      0,
+      80,
+      80
+    ],
+    "button_hover": [
+      160,
+      80,
+      80,
+      80
+    ]
+  },
+  "margins": [
+    24,
+    24,
+    24,
+    24
+  ],
+  "chrome": {
+    "surface": "metal",
+    "artwork": "../assets/skins/nocturne.png",
+    "glyphs": [
+      "|\u25c0",
+      "\u25b6",
+      "\u2161",
+      "\u25b6|"
+    ],
+    "layout": "nocturne",
+    "art_side": "left",
+    "panel_artwork": "../assets/skins/nocturne-panel.png"
+  }
+}

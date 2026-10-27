@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "name": "Redline",
+  "colors": {
+    "background": "#111316",
+    "panel": "#1b1c20",
+    "surface": "#35383b",
+    "border": "#bdc1c6",
+    "accent": "#ffab39",
+    "text": "#f6f2e9",
+    "muted": "#a6a9ad"
+  },
+  "atlas": "redline-frame.svg",
+  "regions": {
+    "panel": [
+      0,
+      0,
+      160,
+      160
+    ],
+    "button_normal": [
+      160,
+      0,
+      80,
+      80
+    ],
+    "button_hover": [
+      160,
+      80,
+      80,
+      80
+    ]
+  },
+  "margins": [
+    24,
+    24,
+    24,
+    24
+  ],
+  "chrome": {
+    "surface": "metal",
+    "artwork": "../assets/skins/redline.png",
+    "glyphs": [
+      "|\u25c0",
+      "\u25b6",
+      "\u2161",
+      "\u25b6|"
+    ],
+    "layout": "redline",
+    "art_side": "right",
+    "panel_artwork": "../assets/skins/redline-panel.png"
+  }
+}

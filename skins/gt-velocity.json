@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "name": "GT Velocity",
+  "colors": {
+    "background": "#07101a",
+    "panel": "#101923",
+    "surface": "#243441",
+    "border": "#a3bbcb",
+    "accent": "#ffb63c",
+    "text": "#eaf5ff",
+    "muted": "#95a6b4"
+  },
+  "atlas": "gt-velocity-frame.svg",
+  "regions": {
+    "panel": [
+      0,
+      0,
+      160,
+      160
+    ],
+    "button_normal": [
+      160,
+      0,
+      80,
+      80
+    ],
+    "button_hover": [
+      160,
+      80,
+      80,
+      80
+    ]
+  },
+  "margins": [
+    24,
+    24,
+    24,
+    24
+  ],
+  "chrome": {
+    "surface": "metal",
+    "artwork": "../assets/skins/gt-velocity.png",
+    "panel_artwork": "../assets/skins/gt-velocity-panel.png",
+    "glyphs": [
+      "|\u25c0",
+      "\u25b6",
+      "\u2161",
+      "\u25b6|"
+    ],
+    "layout": "gt-velocity",
+    "art_side": "hero"
+  }
+}

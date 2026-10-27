@@ -1,38 +1,53 @@
 {
   "version": 1,
-  "name": "Xeno Pod / Weird Pods",
+  "name": "Xeno Pod",
   "colors": {
-    "background": "#0c1114",
-    "panel": "#2f3c38",
-    "surface": "#475952",
-    "border": "#7f9b7e",
-    "accent": "#b3ef6f",
-    "text": "#e0ede7",
-    "muted": "#99b2a6"
+    "background": "#100e17",
+    "panel": "#1c1828",
+    "surface": "#3b2949",
+    "border": "#b68cae",
+    "accent": "#ffae60",
+    "text": "#f5e7f8",
+    "muted": "#baa5c6"
   },
-  "atlas": "xeno-pod.svg",
+  "atlas": "xeno-pod-frame.svg",
   "regions": {
     "panel": [
       0,
       0,
-      96,
-      96
+      160,
+      160
+    ],
+    "button_normal": [
+      160,
+      0,
+      80,
+      80
+    ],
+    "button_hover": [
+      160,
+      80,
+      80,
+      80
     ]
   },
   "margins": [
-    20,
-    20,
-    20,
-    20
+    24,
+    24,
+    24,
+    24
   ],
   "chrome": {
-    "surface": "plastic",
-    "artwork": "xeno-pod-art.svg",
+    "surface": "metal",
+    "artwork": "../assets/skins/xeno-pod.png",
+    "panel_artwork": "../assets/skins/xeno-pod-panel.png",
     "glyphs": [
-      "\u2039\u2039",
-      "\u25c8",
-      "\u25cc",
-      "\u203a\u203a"
-    ]
+      "|\u25c0",
+      "\u25b6",
+      "\u2161",
+      "\u25b6|"
+    ],
+    "layout": "xeno-pod",
+    "art_side": "hero"
   }
 }

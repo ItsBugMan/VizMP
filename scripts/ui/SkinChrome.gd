@@ -30,7 +30,7 @@ func _ready() -> void:
 	_refresh()
 
 func _refresh() -> void:
-	visible = not SkinManager.chrome.is_empty()
+	visible = not SkinManager.chrome.is_empty() and not SkinManager.chrome.has("layout")
 	_art.texture = SkinManager.artwork
 	_title.text = SkinManager.skin_name.to_upper() + " / VIZMP"
 	_title.modulate = SkinManager.accent_color

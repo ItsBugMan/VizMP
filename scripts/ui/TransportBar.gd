@@ -15,9 +15,14 @@ var mute_button: CheckBox
 var _volume_label: Label
 var _volume_title: Label
 var _desktop_volume_note: Label
+var _button_row: HBoxContainer
+var _volume_row: HBoxContainer
+var _compact_row: HBoxContainer
+var _illustrated: bool = false
 
 func _ready() -> void:
 	var buttons := HBoxContainer.new()
+	_button_row = buttons
 	add_child(buttons)
 	for text in ["Previous", "Play", "Pause", "Next"]:
 		var button := Button.new()
@@ -48,6 +53,10 @@ func _ready() -> void:
 	_time.theme_type_variation = &"LCDReadout"
 	add_child(_time)
 	_build_volume()
+	_compact_row = HBoxContainer.new()
+	add_child(_compact_row)
+	SkinManager.skin_changed.connect(_refresh_layout)
+	_refresh_layout.call_deferred()
 
 func _refresh_glyphs() -> void:
 	var labels: Array = ["Previous", "Play", "Pause", "Next"]
@@ -61,6 +70,7 @@ func _build_volume() -> void:
 	_volume_title.text = "File volume"
 	add_child(_volume_title)
 	var row := HBoxContainer.new()
+	_volume_row = row
 	add_child(row)
 	mute_button = CheckBox.new()
 	mute_button.text = "Mute"
@@ -96,6 +106,7 @@ func _sync_volume() -> void:
 	volume_slider.editable = not live
 	mute_button.disabled = live
 	_volume_title.text = "File volume (saved)" if live else "File volume"
+	_volume_title.visible = not _illustrated
 	_desktop_volume_note.visible = live
 	var silent: bool = AudioOutput.muted or AudioOutput.volume_linear <= 0.0
 	_volume_label.text = "%d%%" % roundi(AudioOutput.get_volume_percent())
@@ -146,3 +157,27 @@ func _process(delta: float) -> void:
 func _stamp(seconds: float) -> String:
 	var whole := int(seconds)
 	return "%d:%02d" % [whole / 60, whole % 60]
+
+func _refresh_layout() -> void:
+	_illustrated = SkinManager.chrome.has("layout")
+	if _compact_row == null: return
+	_compact_row.visible = _illustrated
+	_volume_title.visible = not _illustrated
+	var target: Node = _compact_row if _illustrated else self
+	if _button_row.get_parent() != target: _button_row.reparent(target, false)
+	if _volume_row.get_parent() != target: _volume_row.reparent(target, false)
+	_volume_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if _illustrated:
+		move_child(_compact_row, 0)
+		move_child(slider, 1)
+		move_child(_time, 2)
+		_time.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
+	else:
+		move_child(_button_row, 0)
+		move_child(slider, 1)
+		move_child(_time, 2)
+		move_child(_volume_title, 3)
+		move_child(_volume_row, 4)
+		_time.remove_theme_stylebox_override("normal")
+	for button in _buttons:
+		button.custom_minimum_size = Vector2(48, 40) if _illustrated else Vector2.ZERO

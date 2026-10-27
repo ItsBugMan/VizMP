@@ -32,6 +32,17 @@ var _visual_settings: AcceptDialog
 var _viewport_toggle: CheckBox
 var _sensitivity_slider: HSlider
 var _fullscreen_restore_enabled: bool = false
+var borderless_windowed: bool = false
+var _borderless_toggle: CheckBox
+var _window_chrome: Control
+var _old_window_rect: Rect2i
+var _deck_title: Label
+var _deck_hint: Label
+var _deck_buttons: HBoxContainer
+var _settings_button: MenuButton
+var _library_button: Button
+var _vis_button: Button
+
 
 func _ready() -> void:
 	get_window().min_size = Vector2i(1000, 800)
@@ -48,7 +59,10 @@ func _ready() -> void:
 	_layout = DOCK_LAYOUT.new()
 	_layout.name = "DockLayout"
 	_layout.persistence_enabled = save_layout_enabled
+	_layout.hidden_panels["visualizer"] = true
 	add_child(_layout)
+	_layout.panel_visibility_requested.connect(func(id: String, enabled: bool) -> void:
+		if id == "visualizer": set_visualizer_enabled(enabled))
 	_layout.panel_detached.connect(func(_id: String, window: Window) -> void:
 		window.files_dropped.connect(_on_files_dropped)
 		window.window_input.connect(_input))
@@ -87,6 +101,10 @@ func _ready() -> void:
 	get_window().files_dropped.connect(_on_files_dropped)
 	get_tree().auto_accept_quit = false
 	get_window().close_requested.connect(_on_close)
+	_window_chrome = preload("res://scripts/ui/WindowChrome.gd").new()
+	add_child(_window_chrome)
+	_window_chrome.close_requested.connect(_on_close)
+	_sync_window_chrome()
 	_restore_player_preferences.call_deferred()
 	_updates = preload("res://scripts/ui/UpdateDialog.gd").new()
 	add_child(_updates)
@@ -96,6 +114,7 @@ func _ready() -> void:
 
 func _build_deck(content: VBoxContainer) -> void:
 	var title := Label.new()
+	_deck_title = title
 	title.text = "VIZMP"
 	title.add_theme_font_size_override("font_size", 28)
 	content.add_child(title)
@@ -105,6 +124,7 @@ func _build_deck(content: VBoxContainer) -> void:
 	_status.custom_minimum_size = Vector2(240, 55)
 	content.add_child(_status)
 	var buttons := HBoxContainer.new()
+	_deck_buttons = buttons
 	content.add_child(buttons)
 	var open := Button.new()
 	open.text = "Open audio"
@@ -125,6 +145,7 @@ func _build_deck(content: VBoxContainer) -> void:
 	_mode_button.toggled.connect(_toggle_desktop)
 	content.add_child(_mode_button)
 	var settings := MenuButton.new()
+	_settings_button = settings
 	settings.text = "Settings / skin"
 	content.add_child(settings)
 	var menu: PopupMenu = settings.get_popup()
@@ -135,7 +156,8 @@ func _build_deck(content: VBoxContainer) -> void:
 	menu.add_item("Reset panel layout", 101)
 	menu.add_item("Screensaver settings…", 102)
 	menu.add_item("Check for updates…", 103)
-	menu.add_item("Visualizer settings…", 104)
+	menu.add_item("Player / visualizer settings…", 104)
+	menu.add_check_item("Borderless windowed · F10", 105)
 	menu.id_pressed.connect(func(id: int) -> void:
 		if id < SkinManager.BUILTINS.size():
 			_load_skin(SkinManager.BUILTINS[id])
@@ -149,17 +171,32 @@ func _build_deck(content: VBoxContainer) -> void:
 			_updates.popup_centered()
 			AutoUpdater.check_for_updates()
 		elif id == 104:
-			_show_visual_settings())
+			_show_visual_settings()
+		elif id == 105:
+			set_borderless_windowed(not borderless_windowed))
 	menu.about_to_popup.connect(func() -> void:
+		menu.set_item_checked(menu.get_item_index(105), borderless_windowed)
 		for i in range(SkinManager.BUILTINS.size()):
 			menu.set_item_checked(i, SkinManager.current_path == SkinManager.BUILTINS[i]))
 	var hint := Label.new()
-	hint.text = "Drag headers to swap panels. ↗ detaches.\nF11 fullscreen / Esc windowed"
+	_deck_hint = hint
+	hint.text = "Drag headers to swap panels. ↗ detaches.\nF10 borderless · F11 fullscreen / Esc windowed"
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	content.add_child(hint)
 	_update_status = Label.new()
 	_update_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	content.add_child(_update_status)
+	_library_button = Button.new()
+	_library_button.text = "Library"
+	_library_button.pressed.connect(func() -> void: _layout.toggle_detached("library"))
+	buttons.add_child(_library_button)
+	_vis_button = Button.new()
+	_vis_button.text = "VIS"
+	_vis_button.tooltip_text = "Show / hide the visualizer window"
+	_vis_button.pressed.connect(func() -> void: set_visualizer_enabled(not visualizer_enabled))
+	buttons.add_child(_vis_button)
+	SkinManager.skin_changed.connect(_refresh_deck_skin)
+	_refresh_deck_skin.call_deferred()
 
 func _build_visualizer(content: VBoxContainer) -> void:
 	var controls := HFlowContainer.new()
@@ -204,10 +241,12 @@ func _restore_player_preferences() -> void:
 	_layout.restore_layout()
 	var config := ConfigFile.new()
 	if save_layout_enabled and config.load(VISUAL_SETTINGS_PATH) == OK:
+		borderless_windowed = bool(config.get_value("window", "borderless", false))
 		visualizer_enabled = bool(config.get_value("visualizer", "enabled", false))
 		var sensitivity: Variant = config.get_value("audio", "sensitivity", 1.0)
 		if sensitivity is float or sensitivity is int: AudioAnalyzer.sensitivity = float(sensitivity)
 	set_visualizer_enabled(visualizer_enabled, false)
+	set_borderless_windowed(borderless_windowed, false)
 
 func set_visualizer_enabled(enabled: bool, persist: bool = true) -> void:
 	if _immersive and not enabled: set_visualizer_fullscreen(false)
@@ -220,6 +259,7 @@ func set_visualizer_enabled(enabled: bool, persist: bool = true) -> void:
 func _save_visual_settings() -> void:
 	if not save_layout_enabled: return
 	var config := ConfigFile.new()
+	config.set_value("window", "borderless", borderless_windowed)
 	config.set_value("visualizer", "enabled", visualizer_enabled)
 	config.set_value("audio", "sensitivity", AudioAnalyzer.sensitivity)
 	config.save(VISUAL_SETTINGS_PATH)
@@ -227,7 +267,7 @@ func _save_visual_settings() -> void:
 func _show_visual_settings() -> void:
 	if _visual_settings == null:
 		_visual_settings = AcceptDialog.new()
-		_visual_settings.title = "Visualizer Settings"
+		_visual_settings.title = "Player & Visualizer Settings"
 		_visual_settings.min_size = Vector2i(460, 220)
 		add_child(_visual_settings)
 		SkinManager.register_root(_visual_settings)
@@ -237,6 +277,10 @@ func _show_visual_settings() -> void:
 		_viewport_toggle.text = "Enable Visualizer Viewport"
 		_viewport_toggle.toggled.connect(set_visualizer_enabled)
 		column.add_child(_viewport_toggle)
+		_borderless_toggle = CheckBox.new()
+		_borderless_toggle.text = "Borderless windowed player"
+		_borderless_toggle.toggled.connect(set_borderless_windowed)
+		column.add_child(_borderless_toggle)
 		var label := Label.new()
 		label.text = "Audio sensitivity"
 		column.add_child(label)
@@ -252,6 +296,7 @@ func _show_visual_settings() -> void:
 		var hint := Label.new()
 		hint.text = "F11 opens the visualizer directly. Esc restores the deck."
 		column.add_child(hint)
+	_borderless_toggle.set_pressed_no_signal(borderless_windowed)
 	_viewport_toggle.set_pressed_no_signal(visualizer_enabled)
 	_sensitivity_slider.value = AudioAnalyzer.sensitivity
 	_visual_settings.popup_centered()
@@ -275,6 +320,7 @@ func _load_track(path: String) -> void:
 	_cover.texture = metadata.cover
 	_cover.visible = metadata.cover != null
 	_status.text = _track_name
+	_status.tooltip_text = _track_name
 	_playlist.add_paths(PackedStringArray([path]))
 	_playlist.mark_playing(path)
 
@@ -321,6 +367,7 @@ func set_visualizer_fullscreen(enabled: bool) -> void:
 		_visual_index = _visualizer_host.get_index()
 		_old_window_mode = get_window().mode
 		_old_borderless = get_window().borderless
+		_old_window_rect = Rect2i(get_window().position, get_window().size)
 		_visible_windows.clear()
 		for window: Window in _layout.windows.values():
 			if window.visible:
@@ -334,6 +381,9 @@ func set_visualizer_fullscreen(enabled: bool) -> void:
 	else:
 		get_window().mode = _old_window_mode
 		get_window().borderless = _old_borderless
+		if _old_window_mode == Window.MODE_WINDOWED:
+			get_window().size = _old_window_rect.size
+			get_window().position = _old_window_rect.position
 		_visualizer_host.reparent(_visual_parent, false)
 		_visual_parent.move_child(_visualizer_host, _visual_index)
 		_layout.show()
@@ -341,10 +391,14 @@ func set_visualizer_fullscreen(enabled: bool) -> void:
 			if is_instance_valid(window): window.show()
 		_visible_windows.clear()
 		set_visualizer_enabled(_fullscreen_restore_enabled, false)
+	_sync_window_chrome()
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_F11:
+		if event.keycode == KEY_F10:
+			set_borderless_windowed(not borderless_windowed)
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_F11:
 			set_visualizer_fullscreen(not _immersive)
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_ESCAPE and _immersive:
@@ -353,3 +407,41 @@ func _input(event: InputEvent) -> void:
 	elif _immersive and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		set_visualizer_fullscreen(false)
 		get_viewport().set_input_as_handled()
+
+func set_borderless_windowed(enabled: bool, persist: bool = true) -> void:
+	borderless_windowed = enabled
+	if _immersive:
+		_old_borderless = enabled
+	else:
+		var rectangle := Rect2i(get_window().position, get_window().size)
+		get_window().borderless = enabled
+		if get_window().mode == Window.MODE_WINDOWED:
+			get_window().size = rectangle.size
+			get_window().position = rectangle.position
+	if _borderless_toggle != null: _borderless_toggle.set_pressed_no_signal(enabled)
+	_sync_window_chrome()
+	if persist: _save_visual_settings()
+
+func _sync_window_chrome() -> void:
+	if _window_chrome == null: return
+	_window_chrome.visible = borderless_windowed and not _immersive
+	_layout.offset_top = 46.0 if _window_chrome.visible else 0.0
+
+func _refresh_deck_skin() -> void:
+	var illustrated: bool = SkinManager.chrome.has("layout")
+	_deck_title.visible = not illustrated
+	_deck_hint.visible = not illustrated
+	_update_status.visible = not illustrated
+	_library_button.visible = illustrated
+	_vis_button.visible = illustrated
+	_status.custom_minimum_size.y = 36.0 if illustrated else 55.0
+	_status.theme_type_variation = &"LCDReadout" if illustrated else &"Label"
+	_status.max_lines_visible = 3 if illustrated else -1
+	_status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS if illustrated else TextServer.OVERRUN_NO_TRIMMING
+	var target: Node = _deck_buttons if illustrated else _deck_buttons.get_parent()
+	if _settings_button.get_parent() != target: _settings_button.reparent(target, false)
+	if _mode_button.get_parent() != target: _mode_button.reparent(target, false)
+	_mode_button.text = "Desktop audio" if illustrated else "Live desktop audio"
+	if illustrated:
+		_deck_buttons.move_child(_settings_button, 1)
+		_deck_buttons.move_child(_mode_button, 2)
