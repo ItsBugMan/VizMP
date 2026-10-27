@@ -1,113 +1,121 @@
 # VizMP
 
-Godot 4.7 audio visualizer foundation. Open `project.godot` and press **F6**
-with `scenes/Main.tscn` open, or **F5** to launch the configured main scene.
-Choose **Open audio**, or drop an MP3, OGG or WAV onto the application.
-Choose **Live desktop audio** to capture the default Windows output instead.
-See [Desktop loopback setup and validation](docs/DESKTOP_LOOPBACK.md).
-Choose **Particle galaxy** for the GPU-driven 3D mode; see
-[Galaxy scene, shaders and tuning](docs/PARTICLE_GALAXY.md).
-**Fractal tunnel** and **Spectrum city** add raymarched flight and a GPU-driven
-neon skyline; see [Tunnel and city scenes, shaders and tuning](docs/TUNNEL_AND_CITY.md).
-**Vector CRT scope** displays actual stereo X-Y phase with green/amber
-phosphor persistence; see [Oscilloscope scene, PCM routing and tuning](docs/OSCILLOSCOPE.md).
-Windows `.scr` startup, settings, shuffled playback and input exit guards are
-implemented; see [Windows screensaver setup and packaging](docs/WINDOWS_SCREENSAVER.md).
-Panels can be resized, swapped, or detached. Use **Settings / skin** to change
-the theme; see [Modular panels and custom skins](docs/MODULAR_UI_SKINS.md).
-**F11** toggles fullscreen; **Escape** restores windowed mode.
+**Give your music something to look at.**
 
-The desktop app includes **Settings / skin → Check for updates…**. Windows
-installer builds, verified GitHub release ZIPs and the automated release workflow
-are described in [Distribution and updates](docs/DISTRIBUTION_AND_UPDATES.md).
+VizMP is a Windows music player and live audio visualizer with a love for neon,
+particle galaxies and glowing CRTs. Play your own music, react to the sound
+already playing on your desktop, or let a visualizer take over the screen.
 
-## Implemented starter
+**[Download for Windows](https://github.com/ItsBugMan/VizMP/releases/latest)**
+ · [View releases](https://github.com/ItsBugMan/VizMP/releases)
+ · [Report an issue](https://github.com/ItsBugMan/VizMP/issues)
 
-- `scripts/audio/AudioAnalyzer.gd`: Master-bus analyzer autoload; 64 logarithmic
-  frequency bands, stereo magnitude arrays, five broad bands, adaptive onset
-  detection, fast attack/slow release smoothing and a decaying beat envelope.
-- `scripts/visualizers/VisualizerShaderManager.gd`: one publisher for global
-  shader uniforms and a compact 64×1 spectrum texture.
-- `shaders/radial_visualizer.gdshader`: aspect-correct, antialiased radial
-  spectrum with customizable colors and intensity.
-- `scenes/Main.tscn`, `scripts/app/Main.gd`: runnable host and external audio loading.
-- `scenes/visualizers/`: galaxy, raymarch tunnel, MultiMesh city and vector CRT scope.
-- `docs/ARCHITECTURE.md`: contracts and extension plan for the complete application.
+![VizMP's Fractal Tunnel visualizer: a twisting neon tunnel with colorful light trails](docs/images/fractal-tunnel.png)
 
-The project's existing Forward+ / D3D12 settings are preserved. Shader globals
-and autoload order are already configured in `project.godot`. No plug-ins,
-imported media or external assets are required for file mode. Desktop mode
-uses the included WASAPI helper source and its pinned NAudio dependency.
+## Pick your view
 
-## Audio contract
+Switch between five visualizers, each with its own way of responding to your audio:
 
-`AudioAnalyzer.spectrum_updated` fires after each analysis tick (up to 60 Hz).
-Read `spectrum[0..63]`, `spectrum_left`, `spectrum_right`, `bass`, `mid`, `treble`,
-`sub_bass`, `highs`, `volume`, and `beat_pulse` directly. Display levels are [0,1].
-`raw_spectrum` contains uncompressed linear magnitudes. `volume_derivative` is
-the change in mean linear spectral magnitude per second, not PCM RMS.
-`beat_detected(strength)` signals an onset, not a BPM estimate or musical beat grid.
-Consumers must not modify the shared arrays; copy only for history recording.
+- **Radial Spectrum** — a circular spectrum that puts the shape of your music front and center.
+- **Particle Galaxy** — a swirling 3D galaxy of particles with audio-driven motion and bursts.
+- **Fractal Tunnel** — fly through a twisting, colorful tunnel of repeating geometry.
+- **Spectrum City** — a neon skyline that rises and pulses with the music.
+- **Vector CRT Scope** — watch left and right audio channels draw glowing X-Y patterns, with green or amber phosphor and lingering trails.
 
-The analyzer creates/reuses an effect on Master at runtime. Let AudioAnalyzer
-own this effect: rebuilding the bus layout while running requires explicit
-rebinding. When mixing output effects, place analysis after your intended
-processing stage; this starter appends it after existing effects.
+Choose **Low**, **Balanced** or **High** quality, toggle camera motion in supported
+modes, and press **F11** when you want the visuals to fill the screen.
 
-File mode analyzes audio played **inside VizMP** through Master. Live desktop
-mode uses AudioLoopbackManager's WASAPI capture and DesktopAnalysis bus.
-Stereo FFT magnitudes cannot reconstruct phase; signed PCM is available from
-`AudioLoopbackManager.pcm_frames` and its `pcm_updated` signal in desktop mode.
-`StereoPCM` provides the shared signed PCM texture and correlation for either
-file playback or desktop audio while the scope is active.
+![Spectrum City: a grid of glowing cyan and magenta towers responding to audio](docs/images/spectrum-city.png)
 
-## Tuning
+*Actual VizMP captures using generated test audio and spectrum inputs.*
 
-The autoload's exported controls set the dB display floor, smoothing speeds,
-onset ratio, derivative threshold, silence gate and cooldown. Defaults are
-starting points; master level and musical style affect transient sensitivity.
-2048-point FFT balances latency and frequency resolution. At 44.1 kHz its
-frequency spacing is about 21.5 Hz: 64 log display bins are not 64 independent
-FFT coefficients, and the lowest bins can overlap the same FFT coefficients.
-Use FFT_SIZE_4096 for better low-frequency discrimination at higher latency.
+## Your music, your way
 
-Broad ranges: sub-bass 20–60 Hz, bass 60–250 Hz, mid 250–4000 Hz,
-treble 4000–12000 Hz, highs 12000–20000 Hz. Queries clamp to Nyquist.
+- **Play FLAC, MP3, OGG Vorbis and WAV.** Open files or drop them straight into the player, including native lossless FLAC playback.
+- **Visualize desktop audio.** Enable **Live desktop audio** to react to music, browser audio or games playing through your default Windows output device.
+- **Build a local library.** Add music folders, scan their subfolders, double-click a track to play it, or queue the whole library.
+- **Keep playback within reach.** Previous, play, pause, next, elapsed time and a seek bar are built in.
+- **See what's playing.** Track titles, artists, albums and embedded artwork appear where the file's metadata is supported.
+- **Shape file playback.** A six-band equalizer lets you adjust the sound from bass to treble.
 
-## Validation
+FLAC playback works throughout the player, library and screensaver. FLAC tags
+and embedded artwork are not yet read, so those tracks display their filenames.
 
-Validated with the installed **Godot 4.7.2** executable; 4.7.0 itself was not
-available for execution. The source targets Godot 4.7 APIs.
+## Make it your listening space
 
-```powershell
-& '<path-to-godot.exe>' --headless --path . --script res://tests/audio_smoke.gd
-```
+Move the player, equalizer, visualizer, playlist and library into the arrangement
+that suits you. Resize panels, swap their positions or detach them into separate
+windows. VizMP remembers your layout.
 
-The smoke test checks effect initialization, buffer dimensions, silent output,
-onset/cooldown logic and a real 220 Hz PCM signal through Master and the FFT.
-It briefly plays a low-level tone. A normal renderer launch also checks shader
-compilation. Human listening and visual motion review remain useful for tuning.
+Six included skins change the mood: **Classic Mint**, **Midnight Violet**,
+**Amber Terminal**, **Cyberpunk**, **Brushed Metal** and **Retro Phosphor**.
+Custom JSON and texture-atlas skins are supported too.
 
-## Roadmap boundary
+![VizMP's dockable player layout with transport controls, equalizer, Particle Galaxy, playlist and media library](docs/images/vizmp-player.png)
 
-Further 2D/3D modes, persistent playlist libraries and wallpaper integration
-remain extension points. Desktop loopback, GPU galaxy, folded tunnel, spectrum
-city, CRT phase scope, file PCM capture, basic playlists, file EQ, four-slot
-docking, native panel windows, saved skins and Windows screensaver mode are implemented.
+## Let it run as your screensaver
 
-## API references
+VizMP also includes a Windows screensaver. Choose your visualizer, quality and
+skin, then use live desktop audio or a shuffled playlist from a music folder.
 
-- [Spectrum analyzer instance](https://docs.godotengine.org/en/latest/classes/class_audioeffectspectrumanalyzerinstance.html)
-- [Global shader uniforms](https://docs.godotengine.org/en/latest/tutorials/shaders/shader_reference/shading_language.html#global-uniforms)
-- [PCM capture effect](https://docs.godotengine.org/en/latest/classes/class_audioeffectcapture.html)
+The installer offers optional screensaver registration. You can adjust its
+preferences from **Settings / skin → Screensaver settings…** inside VizMP.
+See the [screensaver guide](docs/WINDOWS_SCREENSAVER.md) for configuration and
+current Windows preview limitations.
 
-The online `latest` pages can describe newer development APIs; the installed
-engine and runtime validation are the compatibility check for this starter.
+## Start listening
 
-## Media and graphics overhaul
+1. Open the **[latest release](https://github.com/ItsBugMan/VizMP/releases/latest)**.
+2. Choose the **installer** for setup and shortcuts, or the **portable ZIP** to run from a folder. Extract the complete ZIP and keep its DLL and helper folders together.
+3. Launch **VizMP.exe**. Choose **Open audio**, drop in a track, or start audio in another app and enable **Live desktop audio**.
+4. Pick a visualizer, choose a skin and press **F11**.
 
-See [the implementation guide](docs/FIDELITY_AND_LIBRARY.md) for the Library, metadata support, transport scrubbing, F11 visualizer fullscreen, new skins, quality presets, and verification commands.
+**F11** toggles fullscreen. **Escape** or a left click returns from visualizer
+fullscreen. Use **↗** on a panel to detach it, and **Settings / skin → Reset panel
+layout** to return to the default arrangement.
 
-Native FLAC playback is supported alongside MP3, OGG and WAV. See
-[Windows FLAC setup](docs/FLAC_WINDOWS.md) for the Xiph GDExtension layout,
-shared runtime loader, audio routing, export requirements and verification.
+**Windows x64 · DirectX 12-capable graphics · No separate Godot or .NET installation required.**
+The current Windows build uses Godot 4.7.2 with Forward+ rendering. Lower the
+quality preset if you need a lighter visualizer. Desktop capture follows your
+Windows default output device; see the [audio guide](docs/DESKTOP_LOOPBACK.md)
+if another app is routed to a different device.
+
+Check for new versions from **Settings / skin → Check for updates…**. VizMP
+asks before downloading and installing an update.
+
+## Credits
+
+Created by **[ItsBugMan](https://github.com/ItsBugMan)**, with development assistance from OpenAI Codex.
+
+VizMP is built with the work of these projects and their contributors:
+
+- **[Godot Engine](https://godotengine.org/)** — the application, audio engine and visual rendering.
+- **[godot-xiph-audio](https://github.com/goatchurchprime/godot-xiph-audio)** by **Julian Todd / goatchurchprime** — native FLAC audio support.
+- **[NAudio](https://github.com/naudio/NAudio)** by **Mark Heath and contributors** — the WASAPI audio library used by VizMP's desktop capture helper.
+- **Xiph.Org codecs and godot-cpp** — codec and native extension dependencies; see the [Xiph third-party notices](addons/xiph_audio/THIRD_PARTY_NOTICES.md).
+- **[.NET](https://github.com/dotnet/runtime)** — the runtime bundled with the Windows audio capture helper.
+- **[Inno Setup](https://jrsoftware.org/)** — Windows installer packaging.
+
+Third-party components retain their own licenses. The Windows downloads include
+the Xiph extension notices and the capture helper's NAudio and .NET notices.
+
+## For builders and curious listeners
+
+Want to make your own skin, tune a visualizer or explore how the audio drives
+it? The implementation guides live in [`docs/`](docs/):
+
+- [Custom skins and panel layout](docs/MODULAR_UI_SKINS.md)
+- [Library, artwork, transport and graphics](docs/FIDELITY_AND_LIBRARY.md)
+- [Desktop audio capture](docs/DESKTOP_LOOPBACK.md)
+- [FLAC extension setup](docs/FLAC_WINDOWS.md)
+- [Particle Galaxy](docs/PARTICLE_GALAXY.md) · [Fractal Tunnel and Spectrum City](docs/TUNNEL_AND_CITY.md)
+- [Vector CRT Scope and capture validation](docs/OSCILLOSCOPE.md)
+- [Windows builds, installer and updates](docs/DISTRIBUTION_AND_UPDATES.md)
+- [Audio architecture](docs/ARCHITECTURE.md)
+
+To run from source, open `project.godot` in **Godot 4.7.2** and press **F5**.
+File playback includes the Xiph extension in `addons/xiph_audio/`. Desktop
+capture also requires building the included [Windows helper](docs/DESKTOP_LOOPBACK.md).
+
+Found a bug or have a visualizer idea? **[Open an issue](https://github.com/ItsBugMan/VizMP/issues)**.
+If VizMP earns a place on your desktop, a GitHub star helps others find it.
