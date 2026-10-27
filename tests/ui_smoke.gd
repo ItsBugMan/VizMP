@@ -29,7 +29,7 @@ func _run() -> void:
 	root.add_child(main)
 	await process_frame
 	var layout: MarginContainer = main._layout
-	_check(layout.panels.size() == 4, "Four independent panels compose the split layout")
+	_check(layout.panels.size() == 5, "Five independent panels compose the split layout")
 	_check(_eq_count() == 1, "File EQ is installed once")
 	var fixture := AudioStreamWAV.new()
 	fixture.mix_rate = 44100

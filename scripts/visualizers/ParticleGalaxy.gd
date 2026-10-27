@@ -1,7 +1,7 @@
 extends Node3D
 ## GPU owns every particle. CPU updates emission density at analysis cadence.
 
-const PARTICLE_COUNTS: Array[int] = [16384, 32768, 65536]
+const PARTICLE_COUNTS: Array[int] = [16384, 32768, 98304]
 @onready var particles: GPUParticles3D = $Stars
 @onready var camera: Camera3D = $Camera3D
 var _material: ShaderMaterial

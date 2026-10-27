@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "name": "Brushed Metal",
+  "colors": {
+    "background": "#15191d",
+    "panel": "#343c43",
+    "surface": "#454f58",
+    "border": "#82909a",
+    "accent": "#85d9ff",
+    "text": "#f1f6fa",
+    "muted": "#b1bdc5"
+  },
+  "atlas": "brushed-metal.svg",
+  "regions": {
+    "panel": [
+      0,
+      0,
+      64,
+      64
+    ]
+  },
+  "margins": [
+    16,
+    16,
+    16,
+    16
+  ]
+}

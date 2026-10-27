@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "name": "Cyberpunk",
+  "colors": {
+    "background": "#070a18",
+    "panel": "#10152a",
+    "surface": "#1a2341",
+    "border": "#344b70",
+    "accent": "#ff49cf",
+    "text": "#e8f6ff",
+    "muted": "#8495b8"
+  },
+  "atlas": "cyberpunk.svg",
+  "regions": {
+    "panel": [
+      0,
+      0,
+      64,
+      64
+    ]
+  },
+  "margins": [
+    16,
+    16,
+    16,
+    16
+  ]
+}

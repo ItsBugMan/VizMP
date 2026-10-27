@@ -3,7 +3,7 @@ signal panel_detached(panel_id: String, window: Window)
 ## Fixed split tree with movable panel occupants and native detached windows.
 const PANEL = preload("res://scripts/ui/DockPanel.gd")
 const SLOT = preload("res://scripts/ui/DockSlot.gd")
-const DEFAULT_ORDER: Array[String] = ["deck", "equalizer", "visualizer", "playlist"]
+const DEFAULT_ORDER: Array[String] = ["deck", "equalizer", "visualizer", "playlist", "library"]
 var persistence_enabled: bool = true
 var layout_path: String = "user://layout.cfg"
 var panels: Dictionary = {}
@@ -14,6 +14,7 @@ var _horizontal: HSplitContainer
 var _left: VSplitContainer
 var _right: VSplitContainer
 var _last_saved: String = ""
+var _lower: HSplitContainer
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -28,7 +29,10 @@ func _ready() -> void:
 	_right.split_offset = 160
 	_horizontal.add_child(_left)
 	_horizontal.add_child(_right)
-	for i in range(4):
+	var lower := HSplitContainer.new()
+	_lower = lower
+	_right.add_child(lower)
+	for i in range(DEFAULT_ORDER.size()):
 		var slot: VBoxContainer = SLOT.new()
 		slot.slot_index = i
 		slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -36,7 +40,11 @@ func _ready() -> void:
 		slot.custom_minimum_size = Vector2(270, 150)
 		slot.panel_dropped.connect(dock_panel)
 		_slots.append(slot)
-		(_left if i < 2 else _right).add_child(slot)
+		if i < 2: _left.add_child(slot)
+		elif i == 2:
+			_right.add_child(slot)
+			_right.move_child(slot, 0)
+		else: lower.add_child(slot)
 	var timer := Timer.new()
 	timer.wait_time = 2.0
 	timer.autostart = true
@@ -55,7 +63,7 @@ func add_panel(id: String, title: String) -> VBoxContainer:
 	return panel.content
 
 func dock_panel(id: String, slot: int) -> void:
-	if not panels.has(id) or slot < 0 or slot > 3:
+	if not panels.has(id) or slot < 0 or slot >= DEFAULT_ORDER.size():
 		return
 	var source: int = order.find(id)
 	if windows.has(id):
@@ -68,7 +76,7 @@ func dock_panel(id: String, slot: int) -> void:
 	var displaced: String = order[slot]
 	order[slot] = id
 	order[source] = displaced
-	for i in range(4):
+	for i in range(DEFAULT_ORDER.size()):
 		var panel: Control = panels[order[i]]
 		if not windows.has(order[i]) and panel.get_parent() != _slots[i]:
 			panel.reparent(_slots[i], false)
@@ -130,10 +138,11 @@ func _clamp_window(window: Window) -> void:
 		clampi(window.position.y, area.position.y, maxi(area.position.y, area.end.y - window.size.y)))
 
 func save_layout() -> void:
-	if not persistence_enabled or panels.size() != 4:
+	if not persistence_enabled or panels.size() != DEFAULT_ORDER.size():
 		return
 	var config := ConfigFile.new()
 	config.set_value("layout", "version", 1)
+	config.set_value("layout", "lower_split", _lower.split_offset)
 	config.set_value("layout", "order", order)
 	config.set_value("layout", "splits", Vector3i(_horizontal.split_offset, _left.split_offset, _right.split_offset))
 	for id in windows:
@@ -150,27 +159,31 @@ func restore_layout() -> void:
 	if config.load(layout_path) != OK or config.get_value("layout", "version", 0) != 1:
 		return
 	var saved: Variant = config.get_value("layout", "order", [])
-	if saved is Array and saved.size() == 4:
+	if saved is Array and saved.size() == 4 and not saved.has("library"):
+		saved.append("library")
+	if saved is Array and saved.size() == DEFAULT_ORDER.size():
 		var valid: bool = true
 		for id in DEFAULT_ORDER:
 			valid = valid and saved.count(id) == 1
 		if valid:
-			for i in range(4):
+			for i in range(DEFAULT_ORDER.size()):
 				dock_panel(str(saved[i]), i)
 	var splits: Variant = config.get_value("layout", "splits", null)
 	if splits is Vector3i:
 		_horizontal.split_offset = clampi(splits.x, -2000, 2000)
 		_left.split_offset = clampi(splits.y, -2000, 2000)
 		_right.split_offset = clampi(splits.z, -2000, 2000)
+	_lower.split_offset = clampi(int(config.get_value("layout", "lower_split", 0)), -2000, 2000)
 	for id in DEFAULT_ORDER:
 		var rectangle: Variant = config.get_value("windows", id, Rect2i())
 		if rectangle is Rect2i and rectangle.has_area():
 			detach_panel(id, rectangle)
 
 func reset_layout() -> void:
-	for i in range(4):
+	for i in range(DEFAULT_ORDER.size()):
 		dock_panel(DEFAULT_ORDER[i], i)
 	_horizontal.split_offset = -220
 	_left.split_offset = -50
 	_right.split_offset = 160
+	_lower.split_offset = 0
 	save_layout()

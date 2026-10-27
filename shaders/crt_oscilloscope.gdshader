@@ -34,7 +34,8 @@ void fragment() {
 	bloom += phosphor(uv - vec2(5.0, 5.0) * texel) * 0.5;
 	float energy = 1.0 - exp(-max(0.0, center + bloom * 0.12) * 1.15);
 	vec3 tint = mix(phosphor_color.rgb, vec3(0.85, 1.0, 0.88), smoothstep(0.65, 1.0, energy) * 0.45);
-	vec3 color = tint * energy;
+	// Preserve beam highlights above display white for the HDR bloom pass.
+	vec3 color = tint * (energy + max(0.0, center - 0.8) * 0.18);
 	// Static graticule stays crisp: it is not accumulated into phosphor history.
 	vec2 cell = abs(fract(square * 5.0 + 0.5) - 0.5);
 	vec2 aa = max(fwidth(square * 5.0), vec2(0.002));

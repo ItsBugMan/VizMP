@@ -5,3 +5,5 @@
 /native/LoopbackBridge/obj/
 /bin/loopback/
 /builds/
+# Godot's Windows native-library hot-reload copies and temporary files.
+/addons/xiph_audio/bin/~*

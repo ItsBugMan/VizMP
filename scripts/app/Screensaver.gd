@@ -1,4 +1,5 @@
 extends Control
+const AUDIO_LOADER = preload("res://scripts/audio/AudioStreamLoader.gd")
 ## Visualizer-only scene. No deck, saved docks, file dialogs or detached windows.
 const MAX_TRACKS: int = 10000
 const MAX_DIRECTORIES: int = 2000
@@ -65,7 +66,7 @@ func scan_directory(folder: String, recursive: bool) -> Array[String]:
 				if directory.current_is_dir():
 					if recursive and pending.size() + visited < MAX_DIRECTORIES:
 						pending.append(path)
-				elif name.get_extension().to_lower() in ["mp3", "ogg", "wav"]:
+				elif AUDIO_LOADER.supports(name):
 					found.append(path)
 			if Time.get_ticks_usec() - slice_start >= 3000:
 				await get_tree().process_frame
@@ -92,12 +93,7 @@ func _play_next() -> void:
 			_index = 0
 		var path: String = playlist[_index]
 		_index += 1
-		var stream: AudioStream
-		if FileAccess.file_exists(path):
-			match path.get_extension().to_lower():
-				"mp3": stream = AudioStreamMP3.load_from_file(path)
-				"ogg": stream = AudioStreamOggVorbis.load_from_file(path)
-				"wav": stream = AudioStreamWAV.load_from_file(path)
+		var stream: AudioStream = AUDIO_LOADER.load_file(path)
 		if stream != null:
 			player.stop()
 			AudioAnalyzer.reset_history()

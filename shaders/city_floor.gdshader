@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode unshaded, cull_back;
+render_mode cull_back;
 
 global uniform vec4 audio_bands;
 uniform vec4 shockwaves[8]; // origin X/Z, age in seconds, strength (zero=inactive).
@@ -23,12 +23,14 @@ void fragment() {
 		if (wave.w <= 0.0) { continue; }
 		float radius = wave.z * wave_speed;
 		float edge = abs(length(ground_position - wave.xy) - radius);
-		float ring = 1.0 - smoothstep(0.18, 1.25, edge);
+		float ring = 1.0 - smoothstep(0.22, 1.8, edge);
 		float halo = exp(-edge * 0.65) * 0.2;
 		waves += (ring + halo) * exp(-wave.z * 0.65) * wave.w;
 	}
 	waves = min(waves, 2.5);
-	ALBEDO = vec3(0.007, 0.012, 0.025)
-		+ vec3(0.025, 0.3, 0.55) * grid * (0.3 + audio_bands.x * 0.25)
-		+ vec3(0.1, 0.85, 1.0) * waves * 2.2;
+	ALBEDO = vec3(0.015, 0.023, 0.04);
+	METALLIC = 0.8;
+	ROUGHNESS = 0.22;
+	EMISSION = vec3(0.025, 0.3, 0.55) * grid * (0.3 + audio_bands.x * 0.25)
+		+ vec3(0.1, 0.85, 1.0) * waves * 3.5;
 }

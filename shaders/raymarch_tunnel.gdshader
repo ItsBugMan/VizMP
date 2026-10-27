@@ -52,10 +52,10 @@ void fragment() {
 	vec2 ahead = (centerline(flight_distance + 3.0) - origin.xy) / 3.0;
 	vec3 ray = normalize(vec3(rotation(sin(flight_distance * 0.05) * 0.09) * uv * 1.45 + ahead, 1.0));
 	int folds = min(fold_limit, 2 + int(floor(clamp(audio_bands.y, 0.0, 1.0) * 3.0)));
-	float travel = 0.0;
+	highp float travel = 0.0;
 	float haze = 0.0;
 	bool hit = false;
-	vec3 p = origin;
+	highp vec3 p = origin;
 	for (int step_index = 0; step_index < 112; step_index++) {
 		if (step_index >= march_steps || travel >= far_distance) { break; }
 		p = origin + ray * travel;
@@ -81,5 +81,5 @@ void fragment() {
 	}
 	color += vec3(0.08, 0.015, 0.13) * exp(-dot(uv, uv) * 12.0) * (0.18 + audio_bands.w * 0.3);
 	color *= 1.0 - smoothstep(0.35, 1.35, length(uv)) * 0.45;
-	COLOR = vec4(color / (1.0 + color * 0.45), 1.0);
+	COLOR = vec4(color * 1.35, 1.0);
 }

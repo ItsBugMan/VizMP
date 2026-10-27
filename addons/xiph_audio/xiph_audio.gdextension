@@ -1,0 +1,35 @@
+[configuration]
+entry_symbol = "xiph_audio_library_init"
+compatibility_minimum = "4.5"
+reloadable = false
+
+[icons]
+AudioStreamOggOpus = "res://addons/xiph_audio/icons/audio_stream_ogg_opus.svg"
+AudioStreamFLAC = "res://addons/xiph_audio/icons/audio_stream_flac.svg"
+
+[libraries]
+macos = "res://addons/xiph_audio/bin/libxiph_audio.macos.template_debug.universal.framework"
+macos.template_release = "res://addons/xiph_audio/bin/libxiph_audio.macos.template_release.universal.framework"
+
+windows.debug.x86_64 = "res://addons/xiph_audio/bin/libxiph_audio.windows.template_debug.x86_64.dll"
+windows.release.x86_64 = "res://addons/xiph_audio/bin/libxiph_audio.windows.template_release.x86_64.dll"
+
+linux.debug.x86_64 = "res://addons/xiph_audio/bin/libxiph_audio.linux.template_debug.x86_64.so"
+linux.release.x86_64 = "res://addons/xiph_audio/bin/libxiph_audio.linux.template_release.x86_64.so"
+
+android.debug.arm32 = "res://addons/xiph_audio/bin/libxiph_audio.android.template_debug.arm32.so"
+android.debug.arm64 = "res://addons/xiph_audio/bin/libxiph_audio.android.template_debug.arm64.so"
+android.debug.x86_32 = "res://addons/xiph_audio/bin/libxiph_audio.android.template_debug.x86_32.so"
+android.debug.x86_64 = "res://addons/xiph_audio/bin/libxiph_audio.android.template_debug.x86_64.so"
+android.release.arm32 = "res://addons/xiph_audio/bin/libxiph_audio.android.template_release.arm32.so"
+android.release.arm64 = "res://addons/xiph_audio/bin/libxiph_audio.android.template_release.arm64.so"
+android.release.x86_32 = "res://addons/xiph_audio/bin/libxiph_audio.android.template_release.x86_32.so"
+android.release.x86_64 = "res://addons/xiph_audio/bin/libxiph_audio.android.template_release.x86_64.so"
+
+web.debug.wasm32.nothreads = "res://addons/xiph_audio/bin/libxiph_audio.web.template_debug.wasm32.wasm"
+web.debug.wasm32 = "res://addons/xiph_audio/bin/libxiph_audio.web.template_debug.wasm32.threads.wasm"
+web.release.wasm32.nothreads = "res://addons/xiph_audio/bin/libxiph_audio.web.template_release.wasm32.wasm"
+web.release.wasm32 = "res://addons/xiph_audio/bin/libxiph_audio.web.template_release.wasm32.threads.wasm"
+
+ios.debug.arm64 = "res://addons/xiph_audio/bin/libxiph_audio.ios.template_debug.arm64.dylib"
+ios.release.arm64 = "res://addons/xiph_audio/bin/libxiph_audio.ios.template_release.arm64.dylib"

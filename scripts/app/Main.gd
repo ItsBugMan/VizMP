@@ -1,4 +1,5 @@
 extends Control
+const AUDIO_LOADER = preload("res://scripts/audio/AudioStreamLoader.gd")
 ## Composition only: audio, visuals, docking and skins have separate owners.
 const DOCK_LAYOUT = preload("res://scripts/ui/DockLayout.gd")
 const EQUALIZER = preload("res://scripts/ui/EqualizerPanel.gd")
@@ -6,19 +7,31 @@ const PLAYLIST = preload("res://scripts/ui/PlaylistPanel.gd")
 @export var save_layout_enabled: bool = true
 @onready var _player: AudioStreamPlayer = $Player
 @onready var _visualizer_host: Control = $Visualizer
+var _transport: VBoxContainer
+var _cover: TextureRect
+var _immersive := false
+var _visual_parent: Node
+var _visual_index := 0
+var _old_window_mode: int
+var _old_borderless := false
+var _visible_windows: Array[Window] = []
 var _layout: MarginContainer
 var _playlist: VBoxContainer
 var _dialog: FileDialog
 var _skin_dialog: FileDialog
 var _status: Label
 var _mode_button: Button
-var _pause_button: Button
 var _background: ColorRect
 var _visual_mode: OptionButton
-var _track_name: String = "Open or drop MP3, OGG or WAV files."
+var _updates: AcceptDialog
+var _update_status: Label
+var _track_name: String = "Open or drop MP3, OGG, WAV or FLAC files."
 
 func _ready() -> void:
-	get_window().min_size = Vector2i(820, 620)
+	get_window().min_size = Vector2i(1000, 800)
+	get_window().use_hdr_2d = true
+	if DisplayServer.get_name() != "headless":
+		get_window().hdr_output_requested = true
 	SkinManager.register_root(self)
 	_background = ColorRect.new()
 	_background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -31,7 +44,8 @@ func _ready() -> void:
 	_layout.persistence_enabled = save_layout_enabled
 	add_child(_layout)
 	_layout.panel_detached.connect(func(_id: String, window: Window) -> void:
-		window.files_dropped.connect(_on_files_dropped))
+		window.files_dropped.connect(_on_files_dropped)
+		window.window_input.connect(_input))
 	_build_deck(_layout.add_panel("deck", "Main Deck"))
 	var eq: VBoxContainer = EQUALIZER.new()
 	_layout.add_panel("equalizer", "Equalizer").add_child(eq)
@@ -41,6 +55,13 @@ func _ready() -> void:
 	_layout.add_panel("playlist", "Playlist").add_child(_playlist)
 	_playlist.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_playlist.track_requested.connect(_load_track)
+	_transport.previous_requested.connect(_playlist.play_previous)
+	_transport.next_requested.connect(_playlist.play_next)
+	var library := preload("res://scripts/ui/LibraryPanel.gd").new()
+	_layout.add_panel("library", "Library").add_child(library)
+	library.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	library.track_requested.connect(_load_track)
+	library.queue_requested.connect(_playlist.add_paths)
 	_player.finished.connect(_playlist.play_next)
 	AudioLoopbackManager.register_file_player(_player)
 	AudioLoopbackManager.status_changed.connect(_on_audio_status)
@@ -48,7 +69,7 @@ func _ready() -> void:
 	_dialog = FileDialog.new()
 	_dialog.access = FileDialog.ACCESS_FILESYSTEM
 	_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILES
-	_dialog.filters = PackedStringArray(["*.mp3, *.ogg, *.wav ; Audio files"])
+	_dialog.filters = PackedStringArray([AUDIO_LOADER.FILE_FILTER])
 	_dialog.files_selected.connect(_on_files_dropped)
 	add_child(_dialog)
 	_skin_dialog = FileDialog.new()
@@ -61,6 +82,11 @@ func _ready() -> void:
 	get_tree().auto_accept_quit = false
 	get_window().close_requested.connect(_on_close)
 	_layout.restore_layout.call_deferred()
+	_updates = preload("res://scripts/ui/UpdateDialog.gd").new()
+	add_child(_updates)
+	AutoUpdater.status_changed.connect(func(message: String) -> void: _update_status.text = message)
+	_update_status.text = AutoUpdater.status
+	AutoUpdater.restarting.connect(func() -> void: _layout.save_layout())
 
 func _build_deck(content: VBoxContainer) -> void:
 	var title := Label.new()
@@ -78,10 +104,15 @@ func _build_deck(content: VBoxContainer) -> void:
 	open.text = "Open audio"
 	open.pressed.connect(func() -> void: _dialog.popup_centered_ratio(0.7))
 	buttons.add_child(open)
-	_pause_button = Button.new()
-	_pause_button.text = "Pause / resume"
-	_pause_button.pressed.connect(func() -> void: _player.stream_paused = not _player.stream_paused)
-	buttons.add_child(_pause_button)
+	_transport = preload("res://scripts/ui/TransportBar.gd").new()
+	_transport.player = _player
+	content.add_child(_transport)
+	_cover = TextureRect.new()
+	_cover.custom_minimum_size = Vector2(64, 64)
+	_cover.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_cover.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_cover.visible = false
+	content.add_child(_cover)
 	_mode_button = Button.new()
 	_mode_button.text = "Live desktop audio"
 	_mode_button.toggle_mode = true
@@ -91,28 +122,35 @@ func _build_deck(content: VBoxContainer) -> void:
 	settings.text = "Settings / skin"
 	content.add_child(settings)
 	var menu: PopupMenu = settings.get_popup()
-	for label in ["Classic Mint", "Midnight Violet", "Amber Terminal"]:
+	for label in ["Classic Mint", "Midnight Violet", "Amber Terminal", "Cyberpunk", "Brushed Metal", "Retro Phosphor"]:
 		menu.add_radio_check_item(label)
 	menu.add_separator()
 	menu.add_item("Load custom skin…", 100)
 	menu.add_item("Reset panel layout", 101)
 	menu.add_item("Screensaver settings…", 102)
+	menu.add_item("Check for updates…", 103)
 	menu.id_pressed.connect(func(id: int) -> void:
-		if id < 3:
+		if id < SkinManager.BUILTINS.size():
 			_load_skin(SkinManager.BUILTINS[id])
 		elif id == 100:
 			_skin_dialog.popup_centered_ratio(0.7)
 		elif id == 101:
 			_layout.reset_layout()
 		elif id == 102:
-			ScreensaverManager.show_configuration())
+			ScreensaverManager.show_configuration()
+		elif id == 103:
+			_updates.popup_centered()
+			AutoUpdater.check_for_updates())
 	menu.about_to_popup.connect(func() -> void:
-		for i in range(3):
+		for i in range(SkinManager.BUILTINS.size()):
 			menu.set_item_checked(i, SkinManager.current_path == SkinManager.BUILTINS[i]))
 	var hint := Label.new()
 	hint.text = "Drag headers to swap panels. ↗ detaches.\nF11 fullscreen / Esc windowed"
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	content.add_child(hint)
+	_update_status = Label.new()
+	_update_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	content.add_child(_update_status)
 
 func _build_visualizer(content: VBoxContainer) -> void:
 	var controls := HFlowContainer.new()
@@ -133,6 +171,10 @@ func _build_visualizer(content: VBoxContainer) -> void:
 	quality.select(1)
 	quality.item_selected.connect(_visualizer_host.set_quality)
 	controls.add_child(quality)
+	var fullscreen := Button.new()
+	fullscreen.text = "Fullscreen · F11"
+	fullscreen.pressed.connect(func() -> void: set_visualizer_fullscreen(true))
+	controls.add_child(fullscreen)
 	var motion := CheckButton.new()
 	motion.text = "Camera motion"
 	motion.button_pressed = true
@@ -154,25 +196,23 @@ func _build_visualizer(content: VBoxContainer) -> void:
 	_visualizer_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 func _load_track(path: String) -> void:
-	var stream: AudioStream
-	match path.get_extension().to_lower():
-		"mp3": stream = AudioStreamMP3.load_from_file(path)
-		"ogg": stream = AudioStreamOggVorbis.load_from_file(path)
-		"wav": stream = AudioStreamWAV.load_from_file(path)
-		_:
-			_status.text = "Choose an MP3, OGG or WAV file."
-			return
+	var stream: AudioStream = AUDIO_LOADER.load_file(path)
 	if stream == null:
-		_status.text = "Could not read: " + path.get_file()
+		_status.text = AUDIO_LOADER.last_error
 		return
 	AudioLoopbackManager.set_mode(AudioLoopbackManager.Mode.FILE)
 	_player.stop()
-	AudioAnalyzer.reset_history()
+	AudioAnalyzer.reset_after_seek()
 	StereoPCM.reset()
 	_player.stream = stream
 	_player.stream_paused = false
 	_player.play()
-	_track_name = "PLAYING / " + path.get_file()
+	var metadata := preload("res://scripts/audio/AudioMetadata.gd").read_track(path)
+	_track_name = metadata.title
+	if not metadata.artist.is_empty(): _track_name += "\n" + metadata.artist
+	if not metadata.album.is_empty(): _track_name += " · " + metadata.album
+	_cover.texture = metadata.cover
+	_cover.visible = metadata.cover != null
 	_status.text = _track_name
 	_playlist.add_paths(PackedStringArray([path]))
 	_playlist.mark_playing(path)
@@ -189,7 +229,6 @@ func _toggle_desktop(enabled: bool) -> void:
 func _on_audio_mode(next: int) -> void:
 	var live: bool = next == AudioLoopbackManager.Mode.DESKTOP
 	_mode_button.set_pressed_no_signal(live)
-	_pause_button.disabled = live
 	if not live:
 		_status.text = _track_name
 
@@ -199,7 +238,7 @@ func _on_audio_status(message: String) -> void:
 func _on_files_dropped(paths: PackedStringArray) -> void:
 	_playlist.add_paths(paths)
 	for path in paths:
-		if path.get_extension().to_lower() in ["mp3", "ogg", "wav"]:
+		if AUDIO_LOADER.supports(path):
 			_load_track(path)
 			break
 
@@ -210,10 +249,43 @@ func _on_close() -> void:
 func _exit_tree() -> void:
 	SkinManager.unregister_root(self)
 
-func _unhandled_key_input(event: InputEvent) -> void:
+func set_visualizer_fullscreen(enabled: bool) -> void:
+	if _immersive == enabled: return
+	_immersive = enabled
+	if enabled:
+		_layout.save_layout()
+		_visual_parent = _visualizer_host.get_parent()
+		_visual_index = _visualizer_host.get_index()
+		_old_window_mode = get_window().mode
+		_old_borderless = get_window().borderless
+		_visible_windows.clear()
+		for window: Window in _layout.windows.values():
+			if window.visible:
+				_visible_windows.append(window)
+				window.hide()
+		_visualizer_host.reparent(self, false)
+		_visualizer_host.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		_layout.hide()
+		get_window().borderless = true
+		get_window().mode = Window.MODE_FULLSCREEN
+	else:
+		get_window().mode = _old_window_mode
+		get_window().borderless = _old_borderless
+		_visualizer_host.reparent(_visual_parent, false)
+		_visual_parent.move_child(_visualizer_host, _visual_index)
+		_layout.show()
+		for window in _visible_windows:
+			if is_instance_valid(window): window.show()
+		_visible_windows.clear()
+
+func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_F11:
-			var full: bool = get_window().mode == Window.MODE_FULLSCREEN
-			get_window().mode = Window.MODE_WINDOWED if full else Window.MODE_FULLSCREEN
-		elif event.keycode == KEY_ESCAPE:
-			get_window().mode = Window.MODE_WINDOWED
+			set_visualizer_fullscreen(not _immersive)
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_ESCAPE and _immersive:
+			set_visualizer_fullscreen(false)
+			get_viewport().set_input_as_handled()
+	elif _immersive and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		set_visualizer_fullscreen(false)
+		get_viewport().set_input_as_handled()

@@ -2,7 +2,7 @@ extends Node
 ## Validated data-only skin manifests. One shared Theme per application skin.
 
 signal skin_changed
-const BUILTINS: Array[String] = ["res://skins/classic-mint.json", "res://skins/midnight-violet.json", "res://skins/amber-terminal.json"]
+const BUILTINS: Array[String] = ["res://skins/classic-mint.json", "res://skins/midnight-violet.json", "res://skins/amber-terminal.json", "res://skins/cyberpunk.json", "res://skins/brushed-metal.json", "res://skins/retro-phosphor.json"]
 const SETTINGS_PATH: String = "user://skin.cfg"
 var current_path: String = ""
 var skin_name: String = ""
@@ -50,6 +50,9 @@ func load_skin(path: String, persist: bool = true) -> Error:
 			return _reject("Invalid or missing skin color: " + key)
 	var theme := Theme.new()
 	theme.default_font_size = 14
+	var font := SystemFont.new()
+	font.font_names = PackedStringArray(["Consolas", "Cascadia Mono"]) if data.name == "Retro Phosphor" else PackedStringArray(["Segoe UI", "Noto Sans"])
+	theme.default_font = font
 	var panel: StyleBox = _flat(Color(colors.panel), Color(colors.border), 10)
 	var normal: StyleBox = _flat(Color(colors.surface), Color(colors.border), 8)
 	var hover: StyleBox = _flat(Color(colors.surface).lightened(0.12), Color(colors.accent), 8)
@@ -102,6 +105,17 @@ func load_skin(path: String, persist: bool = true) -> Error:
 		theme.set_color("font_hover_color", type, Color(colors.accent))
 		theme.set_color("font_pressed_color", type, Color(colors.accent))
 		theme.set_color("font_disabled_color", type, Color(colors.muted))
+	for type in ["OptionButton", "MenuButton"]:
+		theme.set_stylebox("normal", type, normal)
+		theme.set_stylebox("hover", type, hover)
+		theme.set_stylebox("pressed", type, pressed)
+		theme.set_stylebox("focus", type, _flat(Color.TRANSPARENT, Color(colors.accent), 8))
+	theme.set_stylebox("panel", "Tree", _flat(Color(colors.background), Color(colors.border), 6))
+	theme.set_stylebox("selected", "Tree", pressed)
+	theme.set_stylebox("selected_focus", "Tree", pressed)
+	theme.set_color("font_color", "Tree", Color(colors.text))
+	for state in ["slider", "grabber_area", "grabber_area_highlight"]:
+		theme.set_stylebox(state, "HSlider", _flat(Color(colors.accent) if state != "slider" else Color(colors.background), Color(colors.border), 3))
 	theme.set_stylebox("panel", "ItemList", _flat(Color(colors.background), Color(colors.border), 6))
 	theme.set_stylebox("selected", "ItemList", pressed)
 	theme.set_stylebox("selected_focus", "ItemList", pressed)
@@ -134,7 +148,9 @@ func _flat(background: Color, border: Color, margin: float) -> StyleBoxFlat:
 	style.bg_color = background
 	style.border_color = border
 	style.set_border_width_all(1)
-	style.set_corner_radius_all(3)
+	style.set_corner_radius_all(5)
+	style.shadow_color = Color(border, 0.15)
+	style.shadow_size = 3
 	style.set_content_margin_all(margin)
 	return style
 

@@ -66,7 +66,7 @@ func _run() -> void:
 	host.set_quality(0)
 	_check(galaxy.particles.amount == 16384, "Low quality reduces particle allocation")
 	host.set_quality(2)
-	_check(galaxy.particles.amount == 65536, "High quality supports 65536 particles")
+	_check(galaxy.particles.amount == 98304, "High quality supports 98304 particles")
 	var old_galaxy: WeakRef = weakref(galaxy)
 	galaxy = null
 	host.set_mode(0)

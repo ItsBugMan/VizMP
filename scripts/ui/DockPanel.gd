@@ -25,7 +25,7 @@ func setup(id: String, title: String) -> void:
 	header.add_child(handle)
 	_slot_menu = OptionButton.new()
 	_slot_menu.tooltip_text = "Dock in this slot; swap with its current panel."
-	for label in ["Upper left", "Lower left", "Upper right", "Lower right"]:
+	for label in ["Upper left", "Lower left", "Upper right", "Lower center", "Lower right"]:
 		_slot_menu.add_item(label)
 	_slot_menu.item_selected.connect(func(slot: int) -> void: dock_requested.emit(panel_id, slot))
 	header.add_child(_slot_menu)

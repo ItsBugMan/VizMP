@@ -1,5 +1,6 @@
 param(
-    [string]$Screensaver = ''
+    [string]$Screensaver = '',
+    [switch]$HeadlessOnly
 )
 $ErrorActionPreference = 'Stop'
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
@@ -15,6 +16,7 @@ $cases = @(
     @{ Name = 'Real primary fullscreen'; Args = @('--quit-after', '30', '/s'); Marker = 'fullscreen=true; borderless=true; primary=true' }
 )
 foreach ($case in $cases) {
+    if ($HeadlessOnly -and $case.Name -eq 'Real primary fullscreen') { continue }
     $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
     $startInfo.FileName = $Screensaver
     $startInfo.UseShellExecute = $false

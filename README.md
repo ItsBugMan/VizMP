@@ -17,6 +17,10 @@ Panels can be resized, swapped, or detached. Use **Settings / skin** to change
 the theme; see [Modular panels and custom skins](docs/MODULAR_UI_SKINS.md).
 **F11** toggles fullscreen; **Escape** restores windowed mode.
 
+The desktop app includes **Settings / skin → Check for updates…**. Windows
+installer builds, verified GitHub release ZIPs and the automated release workflow
+are described in [Distribution and updates](docs/DISTRIBUTION_AND_UPDATES.md).
+
 ## Implemented starter
 
 - `scripts/audio/AudioAnalyzer.gd`: Master-bus analyzer autoload; 64 logarithmic
@@ -99,3 +103,11 @@ docking, native panel windows, saved skins and Windows screensaver mode are impl
 
 The online `latest` pages can describe newer development APIs; the installed
 engine and runtime validation are the compatibility check for this starter.
+
+## Media and graphics overhaul
+
+See [the implementation guide](docs/FIDELITY_AND_LIBRARY.md) for the Library, metadata support, transport scrubbing, F11 visualizer fullscreen, new skins, quality presets, and verification commands.
+
+Native FLAC playback is supported alongside MP3, OGG and WAV. See
+[Windows FLAC setup](docs/FLAC_WINDOWS.md) for the Xiph GDExtension layout,
+shared runtime loader, audio routing, export requirements and verification.

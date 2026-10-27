@@ -1,0 +1,101 @@
+name: Windows distribution
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Validate release version
+        shell: pwsh
+        run: |
+          $text = Get-Content version.cfg -Raw
+          if ($text -notmatch '(?m)^version="(\d+\.\d+\.\d+)"\s*$') { throw 'Invalid version.cfg' }
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$($Matches[1])") { throw 'Tag must match version.cfg' }
+      - name: Prepare verified build tools
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Path builds/tools -Force | Out-Null
+          function Fetch-Asset($repo, $tag, $name) {
+            $release = Invoke-RestMethod "https://api.github.com/repos/$repo/releases/tags/$tag" -Headers @{ Authorization = "Bearer $env:GH_TOKEN"; 'User-Agent' = 'VizMP-CI' }
+            $asset = $release.assets | Where-Object name -CEQ $name
+            if (-not $asset -or $asset.digest -notmatch '^sha256:[0-9a-f]{64}$') { throw "Missing digest for $name" }
+            $path = Join-Path $PWD "builds/tools/$name"
+            Invoke-WebRequest $asset.browser_download_url -OutFile $path
+            if ((Get-FileHash -LiteralPath $path).Hash -ne $asset.digest.Substring(7)) { throw "Checksum mismatch: $name" }
+            return $path
+          }
+          $engine = Fetch-Asset 'godotengine/godot-builds' '4.7.2-stable' 'Godot_v4.7.2-stable_win64.exe.zip'
+          Expand-Archive -LiteralPath $engine -DestinationPath builds/tools/godot
+          $templates = Fetch-Asset 'godotengine/godot-builds' '4.7.2-stable' 'Godot_v4.7.2-stable_export_templates.tpz'
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          [IO.Compression.ZipFile]::ExtractToDirectory($templates, (Join-Path $PWD 'builds/tools/templates'))
+          $templateDir = Join-Path $env:APPDATA 'Godot/export_templates/4.7.2.stable'
+          New-Item -ItemType Directory -Path $templateDir -Force | Out-Null
+          Get-ChildItem builds/tools/templates/templates -File | Copy-Item -Destination $templateDir
+          $setup = Fetch-Asset 'jrsoftware/issrc' 'is-6_7_3' 'innosetup-6.7.3.exe'
+          if ((Get-AuthenticodeSignature -LiteralPath $setup).Status -ne 'Valid') { throw 'Invalid compiler signature' }
+          $compilerDir = Join-Path $PWD 'builds/tools/inno'
+          $process = Start-Process -FilePath $setup -WindowStyle Hidden -PassThru -Wait -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/CURRENTUSER','/PORTABLE=1','/NOICONS',('/DIR="' + $compilerDir + '"'))
+          if ($process.ExitCode -ne 0) { throw 'Compiler preparation failed' }
+      - name: Build installer and update ZIP
+        shell: pwsh
+        run: |
+          $godot = (Get-ChildItem builds/tools/godot -Filter '*console.exe').FullName
+          & $godot --headless --path . --editor --quit
+          if ($LASTEXITCODE -ne 0) { throw 'Godot import failed' }
+          & $godot --headless --path . --script res://tests/audio_smoke.gd
+          if ($LASTEXITCODE -ne 0) { throw 'Audio tests failed' }
+          & $godot --headless --path . --script res://tests/flac_smoke.gd
+          if ($LASTEXITCODE -ne 0) { throw 'FLAC tests failed' }
+          & $godot --headless --path . --script res://tests/updater_smoke.gd
+          if ($LASTEXITCODE -ne 0) { throw 'Updater tests failed' }
+          & ./tests/update_helper_smoke.ps1
+          & ./scripts/packaging/build_installer.ps1 -Godot $godot -ISCC "$PWD/builds/tools/inno/ISCC.exe"
+      - name: Validate exported screensaver
+        shell: pwsh
+        run: ./tests/screensaver_export_smoke.ps1 -Screensaver "$PWD/builds/windows/VizMP.scr" -HeadlessOnly
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VizMP-Windows
+          path: |
+            builds/VizMP_Setup_*.exe
+            builds/VizMP_Windows_x64_*.zip
+            builds/SHA256SUMS.txt
+          if-no-files-found: error
+  publish:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: VizMP-Windows
+          path: release
+      - name: Publish stable GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$RELEASE_TAG" --json url --jq .url; then
+            echo "Release already exists; preserving its published assets. CI builds remain available as workflow artifacts."
+          else
+            gh release create "$RELEASE_TAG" release/* --verify-tag --title "VizMP $RELEASE_TAG" --generate-notes --latest
+          fi

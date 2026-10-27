@@ -15,6 +15,9 @@ GPU ribbon, retained HDR phosphor accumulation and CRT post-processing. See
 Windows screensaver dispatch, settings, primary fullscreen and exit guards
 are implemented in `scripts/app/ScreensaverManager.gd`; see
 `WINDOWS_SCREENSAVER.md` for packaging, preview limitations and validation.
+Verified release downloads and Windows distribution are implemented in
+`scripts/app/AutoUpdater.gd` and `scripts/packaging/`; see
+`DISTRIBUTION_AND_UPDATES.md` for installer, handoff, recovery and CI details.
 The future-module descriptions below remain guidance for later expansion.
 
 ## Data flow and ownership

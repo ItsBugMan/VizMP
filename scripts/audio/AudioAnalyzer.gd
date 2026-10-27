@@ -47,6 +47,7 @@ var _last_beat: float = -10.0
 var _baseline: float = 0.0
 var _previous_level: float = 0.0
 var _warmup: float = 0.0
+var _seek_settle: float = 0.0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -108,6 +109,10 @@ func set_analysis_bus(bus_name: StringName) -> bool:
 
 func _process(delta: float) -> void:
 	_clock += delta
+	if _seek_settle > 0.0:
+		_seek_settle -= delta
+		_last_analysis_time = _clock
+		return
 	beat_pulse *= exp(-8.0 * delta)
 	_elapsed += delta
 	if _elapsed < ANALYSIS_STEP or not is_ready:
@@ -190,3 +195,28 @@ func _release_owned_effect() -> void:
 		if AudioServer.get_bus_effect(bus, i) == _effect:
 			AudioServer.remove_bus_effect(bus, i)
 			break
+
+func reset_after_seek() -> void:
+	reset_history()
+	# Recreate only the selected FFT resource to discard its pre-seek ring buffer.
+	# Preserve effect order and ownership so EQ and PCM capture stay attached.
+	if _effect != null and _bus_index >= 0:
+		for i in range(AudioServer.get_bus_effect_count(_bus_index)):
+			if AudioServer.get_bus_effect(_bus_index, i) == _effect:
+				_effect = _effect.duplicate() as AudioEffectSpectrumAnalyzer
+				AudioServer.remove_bus_effect(_bus_index, i)
+				AudioServer.add_bus_effect(_bus_index, _effect, i)
+				_instance = AudioServer.get_bus_effect_instance(_bus_index, i) as AudioEffectSpectrumAnalyzerInstance
+				break
+	_seek_settle = 0.08
+	spectrum.fill(0.0)
+	spectrum_left.fill(0.0)
+	spectrum_right.fill(0.0)
+	raw_spectrum.fill(0.0)
+	sub_bass = 0.0
+	bass = 0.0
+	mid = 0.0
+	treble = 0.0
+	highs = 0.0
+	volume = 0.0
+	spectrum_updated.emit()

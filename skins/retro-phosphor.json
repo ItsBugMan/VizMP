@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "name": "Retro Phosphor",
+  "colors": {
+    "background": "#030905",
+    "panel": "#08170c",
+    "surface": "#102517",
+    "border": "#285533",
+    "accent": "#73ff93",
+    "text": "#c3ffd0",
+    "muted": "#6caa7a"
+  },
+  "atlas": "retro-phosphor.svg",
+  "regions": {
+    "panel": [
+      0,
+      0,
+      64,
+      64
+    ]
+  },
+  "margins": [
+    16,
+    16,
+    16,
+    16
+  ]
+}

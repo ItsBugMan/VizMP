@@ -11,6 +11,7 @@ config_version=5
 [application]
 
 config/name="VizMP"
+config/version="1.0.0"
 run/main_scene="res://scenes/Entry.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
@@ -23,18 +24,25 @@ AudioLoopbackManager="*res://scripts/audio/AudioLoopbackManager.gd"
 StereoPCM="*res://scripts/audio/StereoPCM.gd"
 VisualizerShaderManager="*res://scripts/visualizers/VisualizerShaderManager.gd"
 SkinManager="*res://scripts/ui/SkinManager.gd"
+AutoUpdater="*res://scripts/app/AutoUpdater.gd"
 
 [display]
 
 window/size/viewport_width=1280
 window/size/viewport_height=800
+window/subwindows/embed_subwindows=false
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
-window/subwindows/embed_subwindows=false
 
 [physics]
 
 3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+renderer/rendering_method="forward_plus"
+
+rendering_device/driver.windows="d3d12"
 
 [shader_globals]
 
@@ -54,7 +62,3 @@ audio_spectrum={
 "type": "sampler2D",
 "value": ""
 }
-
-[rendering]
-
-rendering_device/driver.windows="d3d12"

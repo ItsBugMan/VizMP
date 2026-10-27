@@ -1,7 +1,10 @@
 extends VBoxContainer
+const AUDIO_LOADER = preload("res://scripts/audio/AudioStreamLoader.gd")
+const META = preload("res://scripts/audio/AudioMetadata.gd")
 signal track_requested(path: String)
 var paths: Array[String] = []
 var current_index: int = -1
+var _metadata_pending: Array[String] = []
 var _list: ItemList
 
 func _ready() -> void:
@@ -22,16 +25,18 @@ func _ready() -> void:
 			_activate(selection[0]))
 	controls.get_child(1).pressed.connect(_remove_selected)
 	controls.get_child(2).pressed.connect(func() -> void:
+		_metadata_pending.clear()
 		paths.clear()
 		current_index = -1
 		_list.clear())
 
 func add_paths(incoming: PackedStringArray) -> void:
 	for path in incoming:
-		if path in paths or not path.get_extension().to_lower() in ["mp3", "ogg", "wav"] or not FileAccess.file_exists(path):
+		if path in paths or not AUDIO_LOADER.supports(path) or not FileAccess.file_exists(path):
 			continue
 		paths.append(path)
-		_list.add_item(path.get_file())
+		_list.add_item(path.get_file().get_basename())
+		_metadata_pending.append(path)
 		_list.set_item_tooltip(paths.size() - 1, path)
 
 func mark_playing(path: String) -> void:
@@ -43,6 +48,9 @@ func mark_playing(path: String) -> void:
 func play_next() -> void:
 	if current_index + 1 < paths.size():
 		_activate(current_index + 1)
+
+func play_previous() -> void:
+	_activate(maxi(0, current_index - 1))
 
 func _activate(index: int) -> void:
 	if index >= 0 and index < paths.size():
@@ -59,3 +67,12 @@ func _remove_selected() -> void:
 		current_index -= 1
 	elif index == current_index:
 		current_index = index - 1
+
+func _process(_delta: float) -> void:
+	var deadline := Time.get_ticks_usec() + 2000
+	while not _metadata_pending.is_empty() and Time.get_ticks_usec() < deadline:
+		var path: String = _metadata_pending.pop_back()
+		var index := paths.find(path)
+		if index < 0: continue
+		var metadata := META.read_track(path, false)
+		_list.set_item_text(index, (metadata.artist + " — " if not metadata.artist.is_empty() else "") + metadata.title)

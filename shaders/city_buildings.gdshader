@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode unshaded, cull_back;
+render_mode cull_back;
 
 global uniform sampler2D audio_spectrum;
 global uniform vec4 audio_details;
@@ -41,8 +41,10 @@ void fragment() {
 	float edge = mix(smoothstep(0.46, 0.5, abs(side_u)),
 		1.0 - smoothstep(0.01, 0.055, min(0.5 - abs(facade_position.x), 0.5 - abs(facade_position.z))), roof);
 	float face_shade = 0.55 + abs(facade_normal.x) * 0.3 + roof * 0.3;
-	// In the unshaded path, write HDR radiance to ALBEDO directly.
-	ALBEDO = vec3(0.018, 0.028, 0.052) * face_shade
-		+ neon * (windows * (0.18 + energy * 1.8) + edge * (0.06 + energy * 0.3))
+	// Opaque lit surfaces retain depth/normals for Forward+ SSAO and SSR.
+	ALBEDO = vec3(0.045, 0.065, 0.1) * face_shade;
+	METALLIC = 0.55;
+	ROUGHNESS = 0.28;
+	EMISSION = neon * (windows * (0.18 + energy * 1.8) + edge * (0.06 + energy * 0.3))
 		* (1.0 + audio_details.z * 0.3);
 }
