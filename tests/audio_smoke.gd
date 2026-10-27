@@ -34,6 +34,9 @@ func _run() -> void:
 	_check(analyzer._last_beat == beat_time, "Cooldown rejects immediate retrigger")
 	analyzer.reset_history()
 	# A real stereo 220 Hz PCM stream exercises the bus, not mocked FFT data.
+	# Reordering effects while the FFT is silent must not retire its reader.
+	var eq := AudioEffectEQ6.new()
+	AudioServer.add_bus_effect(AudioServer.get_bus_index(&"Master"), eq, 0)
 	var data := PackedByteArray()
 	data.resize(44100 * 2 * 2)
 	for frame in range(44100):
@@ -50,12 +53,13 @@ func _run() -> void:
 	player.stream = stream
 	player.play()
 	await create_timer(0.5).timeout
-	_check(analyzer.bass > 0.1, "220 Hz audio reaches bass band through Master FFT")
+	_check(analyzer.bass > 0.1, "220 Hz reaches the FFT after inserting an EQ before it")
 	_check(analyzer.bass > analyzer.highs, "Bass tone exceeds high-frequency energy")
 	player.stop()
 	player.stream = null
 	stream = null
 	player.queue_free()
+	AudioServer.remove_bus_effect(AudioServer.get_bus_index(&"Master"), 0)
 	# Let the audio mixer retire its last playback reference before teardown.
 	await create_timer(0.1).timeout
 	print("Failures: ", _failures)

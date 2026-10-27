@@ -5,9 +5,12 @@ const GALAXY_SCENE: PackedScene = preload("res://scenes/visualizers/ParticleGala
 const TUNNEL_SCENE: PackedScene = preload("res://scenes/visualizers/RaymarchTunnel.tscn")
 const CITY_SCENE: PackedScene = preload("res://scenes/visualizers/AudioCity.tscn")
 const SCOPE_SCENE: PackedScene = preload("res://scenes/visualizers/Oscilloscope.tscn")
+const LIGHTNING_SCENE: PackedScene = preload("res://scenes/visualizers/LightningVisualizer.tscn")
+const ASCII_SCENE: PackedScene = preload("res://scenes/visualizers/AsciiRainVisualizer.tscn")
 const RENDER_SCALES: Array[float] = [0.7, 0.85, 1.0]
 const TUNNEL_SHRINK: Array[int] = [3, 2, 1]
-enum Mode { RADIAL, GALAXY, TUNNEL, CITY, SCOPE }
+enum Mode { RADIAL, GALAXY, TUNNEL, CITY, SCOPE, LIGHTNING, ASCII_RAIN }
+const MODE_NAMES: Array[String] = ["Radial spectrum", "Particle galaxy", "Fractal tunnel", "Spectrum city", "Vector CRT scope", "Lightning storm", "ASCII face rain"]
 signal mode_changed(selected: int)
 signal scope_palette_changed(selected: int)
 var mode: int = 0
@@ -17,9 +20,35 @@ var scope_palette: int = 0
 var _container: SubViewportContainer
 var _viewport: SubViewport
 var _active_visualizer: Node
+var viewport_enabled: bool = true
+var _suspended_viewports: Dictionary = {}
+
+func set_viewport_enabled(enabled: bool) -> void:
+	viewport_enabled = enabled
+	visible = enabled
+	process_mode = Node.PROCESS_MODE_INHERIT if enabled else Node.PROCESS_MODE_DISABLED
+	if _viewport != null:
+		if enabled:
+			for entry: Array in _suspended_viewports.values():
+				var target: SubViewport = entry[0].get_ref()
+				if target != null: target.render_target_update_mode = entry[1]
+			_suspended_viewports.clear()
+		else:
+			var targets: Array[Node] = _viewport.find_children("*", "SubViewport", true, false)
+			targets.append(_viewport)
+			for target: SubViewport in targets:
+				var key: int = target.get_instance_id()
+				if not _suspended_viewports.has(key):
+					_suspended_viewports[key] = [weakref(target), target.render_target_update_mode]
+				target.render_target_update_mode = SubViewport.UPDATE_DISABLED
+		_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS if enabled else SubViewport.UPDATE_DISABLED
+	if is_instance_valid(_active_visualizer):
+		_active_visualizer.process_mode = Node.PROCESS_MODE_INHERIT if enabled else Node.PROCESS_MODE_DISABLED
+		if _active_visualizer.has_method("set_viewport_active"):
+			_active_visualizer.set_viewport_active(enabled)
 
 func set_mode(next_mode: int) -> void:
-	next_mode = clampi(next_mode, Mode.RADIAL, Mode.SCOPE)
+	next_mode = clampi(next_mode, Mode.RADIAL, Mode.ASCII_RAIN)
 	if next_mode == mode:
 		return
 	mode = next_mode
@@ -34,16 +63,18 @@ func set_mode(next_mode: int) -> void:
 	_container.stretch = true
 	var grade := ShaderMaterial.new()
 	grade.shader = preload("res://shaders/visualizer_grade.gdshader")
-	_container.material = grade
+	# Keep ASCII ink and the silence gate pixel-exact through presentation.
+	_container.material = null if mode == Mode.ASCII_RAIN else grade
 	_container.stretch_shrink = TUNNEL_SHRINK[quality] if mode == Mode.TUNNEL else 1
 	add_child(_container)
 	_viewport = SubViewport.new()
-	var canvas_mode: bool = mode == Mode.TUNNEL or mode == Mode.SCOPE
+	var canvas_mode: bool = mode in [Mode.TUNNEL, Mode.SCOPE, Mode.LIGHTNING, Mode.ASCII_RAIN]
 	_viewport.use_hdr_2d = true
 	_viewport.own_world_3d = true
 	_viewport.disable_3d = canvas_mode
 	_viewport.handle_input_locally = false
-	_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS if viewport_enabled else SubViewport.UPDATE_DISABLED
+	_viewport.render_target_clear_mode = SubViewport.CLEAR_MODE_ALWAYS
 	_viewport.scaling_3d_scale = RENDER_SCALES[quality]
 	_container.add_child(_viewport)
 	match mode:
@@ -51,10 +82,13 @@ func set_mode(next_mode: int) -> void:
 		Mode.TUNNEL: _active_visualizer = TUNNEL_SCENE.instantiate()
 		Mode.CITY: _active_visualizer = CITY_SCENE.instantiate()
 		Mode.SCOPE: _active_visualizer = SCOPE_SCENE.instantiate()
+		Mode.LIGHTNING: _active_visualizer = LIGHTNING_SCENE.instantiate()
+		Mode.ASCII_RAIN: _active_visualizer = ASCII_SCENE.instantiate()
 	_viewport.add_child(_active_visualizer)
 	_apply_environment()
 	_active_visualizer.set_quality(quality)
 	_active_visualizer.set_camera_motion(camera_motion)
+	set_viewport_enabled(viewport_enabled)
 	if mode == Mode.SCOPE:
 		_active_visualizer.set_palette(scope_palette)
 	mode_changed.emit(mode)
@@ -79,6 +113,7 @@ func set_scope_palette(index: int) -> void:
 	scope_palette_changed.emit(scope_palette)
 
 func _release_active() -> void:
+	_suspended_viewports.clear()
 	if is_instance_valid(_container):
 		_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 		remove_child(_container)
@@ -102,7 +137,7 @@ func _apply_environment() -> void:
 		world.environment = world.environment.duplicate() as Environment
 	var env := world.environment
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.glow_enabled = quality > 0
+	env.glow_enabled = quality > 0 and mode != Mode.ASCII_RAIN
 	env.glow_intensity = 0.85 if quality == 2 else 0.65
 	env.glow_bloom = 0.08
 	env.glow_hdr_threshold = 1.1

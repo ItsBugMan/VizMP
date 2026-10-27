@@ -1,6 +1,7 @@
 extends SceneTree
 ## Forward+/D3D12 integration. Real stereo WAV passes through the audio bus;
 ## Master is muted after its capture tap, so the test does not play test tones.
+## Use --audio-driver Dummy to validate stereo capture on surround endpoints.
 var _failures: int = 0
 var _player: AudioStreamPlayer
 var _pcm: Node
@@ -80,6 +81,8 @@ func _run() -> void:
 	var main: Control = load("res://scenes/Main.tscn").instantiate()
 	main.save_layout_enabled = false
 	root.add_child(main)
+	await process_frame
+	main.set_visualizer_enabled(true, false)
 	_player = main._player
 	var host: Control = main._visualizer_host
 	host.set_mode(host.Mode.SCOPE)

@@ -2,12 +2,14 @@
 
 ## Use the panels
 
-Press **F5**. The four independent panels are Main Deck, Equalizer, Visualizer,
-and Playlist. Resize the splitters between panels to change their proportions.
+Press **F5**. The five independent panels are Main Deck, Equalizer, Visualizer,
+Playlist and Library. The visualizer starts hidden; enable it through
+**Settings / skin → Visualizer settings… → Enable Visualizer Viewport**.
+Resize the splitters between panels to change their proportions.
 
 - **Rearrange:** drag a panel's title onto another panel to swap their slots.
   The title bar's slot selector also docks/swaps it into Upper left, Lower
-  left, Upper right, or Lower right.
+  left, Upper right, Lower center, or Lower right.
 - **Detach:** press **↗**. The same live panel moves into a native, borderless
   Window; the content is reparented, not recreated.
 - **Move a detached window:** drag its title text. Windows' native window
@@ -16,7 +18,7 @@ and Playlist. Resize the splitters between panels to change their proportions.
   through the operating system. Closing a panel window redocks its content.
 - **Reset:** Main Deck -> **Settings / skin -> Reset panel layout**.
 
-The docking tree has four slots. It does not create arbitrary nested dock
+The docking tree has five slots. It does not create arbitrary nested dock
 trees or implement magnetic attachment between detached windows. Drag/drop
 inside the main window swaps fixed slots; use the explicit slot selector when
 returning a detached window to a dock.

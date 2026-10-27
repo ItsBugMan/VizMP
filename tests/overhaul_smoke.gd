@@ -36,6 +36,7 @@ func run() -> void:
 	root.add_child(main)
 	await process_frame
 	check(main._layout.panels.has("library"), "Library is a fifth dockable panel")
+	main.set_visualizer_enabled(true, false)
 	var fixture := AudioStreamWAV.new()
 	fixture.mix_rate = 44100
 	fixture.format = AudioStreamWAV.FORMAT_16_BITS

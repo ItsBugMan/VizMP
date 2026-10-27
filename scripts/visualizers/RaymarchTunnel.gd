@@ -22,7 +22,8 @@ func set_camera_motion(enabled: bool) -> void:
 	motion_enabled = enabled
 
 func _process(delta: float) -> void:
-	_speed = lerpf(_speed, 1.0 + AudioAnalyzer.sub_bass * 7.0, 1.0 - exp(-delta * 5.0))
+	# Audio never changes the camera path or velocity. Energy drives emission.
+	_speed = lerpf(_speed, 1.8, 1.0 - exp(-delta * 3.0))
 	if motion_enabled:
 		flight_distance = fposmod(flight_distance + _speed * delta, PERIOD)
 		_material.set_shader_parameter(&"flight_distance", flight_distance)

@@ -21,10 +21,10 @@ its version, rebuilds the self-contained WASAPI helper, exports **Windows Deskto
 and **Windows Screensaver**, includes the helper's license notices, skins and
 version metadata, then compiles `scripts/packaging/vizmp_setup.iss`.
 
-Outputs for version 1.0.0:
+Outputs for version 1.1.0:
 
-- `builds/VizMP_Setup_v1.0.0.exe` — installer (requires ISCC).
-- `builds/VizMP_Windows_x64_v1.0.0.zip` — flat-root portable/update payload.
+- `builds/VizMP_Setup_v1.1.0.exe` — installer (requires ISCC).
+- `builds/VizMP_Windows_x64_v1.1.0.zip` — flat-root portable/update payload.
 - `builds/SHA256SUMS.txt` — checksums of generated artifacts.
 - `builds/windows/` — complete runnable distribution, including embedded PCKs.
 
@@ -122,11 +122,11 @@ the installer/ZIP/checksums. Manual dispatch creates downloadable build artifact
 Tag runs additionally publish a stable GitHub Release with those three files;
 the tag must exactly match `version.cfg`. Only the publish job can write releases.
 
-For the next release, set `version.cfg` to `1.1.0`, commit the implementation,
-push that commit and a matching `v1.1.0` tag. Published GitHub assets then become
+For the next patch release, set `version.cfg` to `1.1.1`, commit the implementation,
+push that commit and a matching `v1.1.1` tag. Published GitHub assets then become
 available to installed clients. A release is built once by CI; clients download
-the build rather than rebuilding Godot themselves. No release has been published
-by adding this workflow. Do not reuse release tags or silently replace an update
+the build rather than rebuilding Godot themselves. Release notes come from the
+matching `docs/RELEASE_<version>.md` when present. Do not reuse release tags or silently replace an update
 asset; issue a new patch version instead.
 
 ## Validation

@@ -22,6 +22,8 @@ func _run() -> void:
 	var main: Control = load("res://scenes/Main.tscn").instantiate()
 	main.save_layout_enabled = false
 	root.add_child(main)
+	await process_frame
+	main.set_visualizer_enabled(true, false)
 	var host: Control = main._visualizer_host
 	host.set_mode(1)
 	await create_timer(1.0).timeout

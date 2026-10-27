@@ -62,6 +62,8 @@ func _run() -> void:
 	var main: Control = load("res://scenes/Main.tscn").instantiate()
 	main.save_layout_enabled = false
 	root.add_child(main)
+	await process_frame
+	main.set_visualizer_enabled(true, false)
 	var host: Control = main._visualizer_host
 	host.set_mode(host.Mode.TUNNEL)
 	await create_timer(0.3).timeout
@@ -76,7 +78,7 @@ func _run() -> void:
 	await create_timer(0.6).timeout
 	distance_before = tunnel.flight_distance
 	await create_timer(0.1).timeout
-	_check(tunnel.flight_distance - distance_before > quiet_distance * 3.0, "Sub-bass increases integrated flight speed")
+	_check(tunnel.flight_distance - distance_before < quiet_distance * 1.5, "Sub-bass leaves smooth camera velocity independent of energy")
 	host.set_camera_motion(false)
 	distance_before = tunnel.flight_distance
 	await create_timer(0.1).timeout

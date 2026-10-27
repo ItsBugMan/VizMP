@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "name": "Arsenal Titanium / Guns",
+  "colors": {
+    "background": "#0d0f15",
+    "panel": "#32363a",
+    "surface": "#4b5255",
+    "border": "#898b84",
+    "accent": "#d5b984",
+    "text": "#e3e9e8",
+    "muted": "#9fa8aa"
+  },
+  "atlas": "arsenal-titanium.svg",
+  "regions": {
+    "panel": [
+      0,
+      0,
+      96,
+      96
+    ]
+  },
+  "margins": [
+    20,
+    20,
+    20,
+    20
+  ],
+  "chrome": {
+    "surface": "mech",
+    "artwork": "arsenal-titanium-art.svg",
+    "glyphs": [
+      "<<",
+      "ARM",
+      "SAFE",
+      ">>"
+    ]
+  }
+}

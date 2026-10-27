@@ -15,6 +15,8 @@ func setup(id: String, title: String) -> void:
 	add_child(column)
 	var header := HBoxContainer.new()
 	column.add_child(header)
+	var chrome := preload("res://scripts/ui/SkinChrome.gd").new()
+	column.add_child(chrome)
 	var handle: Label = HANDLE.new()
 	handle.panel_id = id
 	handle.text = title.to_upper()

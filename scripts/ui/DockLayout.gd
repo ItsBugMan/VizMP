@@ -15,6 +15,23 @@ var _left: VSplitContainer
 var _right: VSplitContainer
 var _last_saved: String = ""
 var _lower: HSplitContainer
+var hidden_panels: Dictionary = {}
+
+func set_panel_visible(id: String, enabled: bool) -> void:
+	if not panels.has(id): return
+	if enabled: hidden_panels.erase(id)
+	else: hidden_panels[id] = true
+	_refresh_visibility()
+
+func _refresh_visibility() -> void:
+	for id in panels:
+		panels[id].visible = not hidden_panels.has(id)
+		if windows.has(id): windows[id].visible = not hidden_panels.has(id)
+	for i in range(_slots.size()):
+		_slots[i].visible = not hidden_panels.has(order[i]) and not windows.has(order[i])
+	_left.visible = _slots[0].visible or _slots[1].visible
+	_lower.visible = _slots[3].visible or _slots[4].visible
+	_right.visible = _slots[2].visible or _lower.visible
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -81,6 +98,7 @@ func dock_panel(id: String, slot: int) -> void:
 		if not windows.has(order[i]) and panel.get_parent() != _slots[i]:
 			panel.reparent(_slots[i], false)
 		panel.update_location(i, windows.has(order[i]))
+	_refresh_visibility()
 	save_layout()
 
 func toggle_detached(id: String) -> void:
@@ -96,6 +114,8 @@ func detach_panel(id: String, rectangle: Rect2i = Rect2i()) -> void:
 	var window := Window.new()
 	window.title = "VizMP / " + id.capitalize()
 	window.borderless = true
+	window.transparent = true
+	window.transparent_bg = true
 	window.transient = true
 	window.min_size = Vector2i(panel.get_combined_minimum_size().ceil()).max(Vector2i(300, 220))
 	window.size = Vector2i(maxi(420, int(panel.size.x)), maxi(280, int(panel.size.y)))
@@ -123,6 +143,7 @@ func detach_panel(id: String, rectangle: Rect2i = Rect2i()) -> void:
 			DisplayServer.window_start_resize(DisplayServer.WINDOW_EDGE_BOTTOM_RIGHT, window.get_window_id()))
 	window.add_child(grip)
 	window.show()
+	_refresh_visibility()
 	panel_detached.emit(id, window)
 	save_layout()
 

@@ -29,6 +29,7 @@ func _run() -> void:
 	root.add_child(main)
 	await process_frame
 	var layout: MarginContainer = main._layout
+	main.set_visualizer_enabled(true, false)
 	_check(layout.panels.size() == 5, "Five independent panels compose the split layout")
 	_check(_eq_count() == 1, "File EQ is installed once")
 	var fixture := AudioStreamWAV.new()

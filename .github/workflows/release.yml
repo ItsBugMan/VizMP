@@ -86,6 +86,7 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: VizMP-Windows
@@ -99,5 +100,10 @@ jobs:
           if gh release view "$RELEASE_TAG" --json url --jq .url; then
             echo "Release already exists; preserving its published assets. CI builds remain available as workflow artifacts."
           else
-            gh release create "$RELEASE_TAG" release/* --verify-tag --title "VizMP $RELEASE_TAG" --generate-notes --latest
+            notes="docs/RELEASE_${RELEASE_TAG#v}.md"
+            if [ -f "$notes" ]; then
+              gh release create "$RELEASE_TAG" release/* --verify-tag --title "VizMP $RELEASE_TAG" --notes-file "$notes" --latest
+            else
+              gh release create "$RELEASE_TAG" release/* --verify-tag --title "VizMP $RELEASE_TAG" --generate-notes --latest
+            fi
           fi

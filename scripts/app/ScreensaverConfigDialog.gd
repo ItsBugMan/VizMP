@@ -27,7 +27,7 @@ func _ready() -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 6)
 	add_child(column)
-	_mode = _option(column, "Default visualizer", ["Radial spectrum", "Particle galaxy", "Fractal tunnel", "Spectrum city", "Vector CRT scope"])
+	_mode = _option(column, "Default visualizer", preload("res://scripts/visualizers/VisualizerHost.gd").MODE_NAMES)
 	_mode.select(settings.mode)
 	_quality = _option(column, "Graphics quality", ["Low", "Balanced", "High"])
 	_quality.select(settings.quality)

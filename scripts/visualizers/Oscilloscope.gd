@@ -46,6 +46,14 @@ func _exit_tree() -> void:
 		_leased = false
 		StereoPCM.release(self)
 
+func set_viewport_active(enabled: bool) -> void:
+	if enabled:
+		_acquire_pcm()
+		_clear_history()
+	elif _leased:
+		_leased = false
+		StereoPCM.release(self)
+
 func set_quality(index: int) -> void:
 	index = clampi(index, 0, 2)
 	if index == _quality:

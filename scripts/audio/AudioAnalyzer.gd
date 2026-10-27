@@ -19,6 +19,9 @@ const ANALYSIS_STEP: float = 1.0 / 60.0
 @export_range(0.0, 10.0) var derivative_threshold: float = 0.35
 @export_range(0.05, 0.5) var beat_cooldown: float = 0.16
 @export_range(0.00001, 0.1) var silence_gate: float = 0.0001
+@export_range(0.0, 8.0, 0.05) var sensitivity: float = 1.0:
+	set(value):
+		sensitivity = clampf(value, 0.0, 8.0) if is_finite(value) else 1.0
 
 var spectrum := PackedFloat32Array() # Smoothed display energy [0, 1].
 var spectrum_left := PackedFloat32Array()
@@ -31,6 +34,7 @@ var mid: float = 0.0 # 250–4000 Hz
 var treble: float = 0.0 # 4000–12000 Hz
 var highs: float = 0.0 # 12000–20000 Hz
 var volume: float = 0.0 # Spectrum-derived level, NOT calibrated RMS.
+var signal_active: bool = false # Unsmooth gate; silence-sensitive modes use this.
 var volume_derivative: float = 0.0 # Linear magnitude / second.
 var beat_pulse: float = 0.0 # Immediate onset, exponential decay [0, 1].
 var is_ready: bool = false
@@ -104,6 +108,7 @@ func set_analysis_bus(bus_name: StringName) -> bool:
 	treble = 0.0
 	highs = 0.0
 	volume = 0.0
+	signal_active = false
 	spectrum_updated.emit()
 	return is_ready
 
@@ -122,11 +127,22 @@ func _process(delta: float) -> void:
 	_last_analysis_time = _clock
 	_elapsed = fmod(_elapsed, ANALYSIS_STEP)
 	var total: float = 0.0
+	var peak: float = 0.0
+	# Inserting/removing EQ or capture effects rebuilds Godot's effect instances.
+	# Resolve the current instance by resource identity rather than retaining a
+	# retired FFT instance that silently returns its last (usually zero) frame.
+	for i in range(AudioServer.get_bus_effect_count(_bus_index)):
+		if AudioServer.get_bus_effect(_bus_index, i) == _effect:
+			_effect_index = i
+			_instance = AudioServer.get_bus_effect_instance(_bus_index, i) as AudioEffectSpectrumAnalyzerInstance
+			break
+	if _instance == null: return
 	for i in range(BIN_COUNT):
 		var stereo: Vector2 = _instance.get_magnitude_for_frequency_range(
 			frequency_edges[i], frequency_edges[i + 1],
 			AudioEffectSpectrumAnalyzerInstance.MAGNITUDE_MAX)
 		var magnitude: float = (stereo.x + stereo.y) * 0.5
+		peak = maxf(peak, magnitude)
 		raw_spectrum[i] = magnitude
 		total += magnitude
 		spectrum[i] = _smooth(spectrum[i], _display_energy(magnitude), dt)
@@ -139,6 +155,7 @@ func _process(delta: float) -> void:
 	treble = _smooth(treble, _band(4000.0, 12000.0), dt)
 	highs = _smooth(highs, _band(12000.0, MAX_HZ), dt)
 	var level: float = total / BIN_COUNT
+	signal_active = peak > silence_gate and sensitivity > 0.0
 	volume = _smooth(volume, _display_energy(level), dt)
 	_detect_beat(level, dt)
 	spectrum_updated.emit()
@@ -150,11 +167,11 @@ func _detect_beat(level: float, dt: float) -> void:
 	_warmup += dt
 	# Compare against the OLD baseline so the onset cannot raise its own gate.
 	var threshold: float = maxf(_baseline * beat_ratio, silence_gate)
-	if (_warmup > 0.35 and level > threshold
+	if (sensitivity > 0.0 and _warmup > 0.35 and level > threshold
 			and volume_derivative > derivative_threshold
 			and _clock - _last_beat >= beat_cooldown):
 		_last_beat = _clock
-		beat_pulse = clampf((level - threshold) / maxf(threshold, 0.001), 0.0, 1.0)
+		beat_pulse = clampf((level - threshold) / maxf(threshold, 0.001) * sensitivity, 0.0, 1.0)
 		beat_detected.emit(beat_pulse)
 	_baseline = lerpf(_baseline, level, 1.0 - exp(-dt / 0.65))
 
@@ -168,7 +185,7 @@ func _band(low: float, high: float) -> float:
 
 func _display_energy(magnitude: float) -> float:
 	# Exact silence must remain zero; guard log(0) with a small positive value.
-	return clampf((linear_to_db(maxf(magnitude, 0.000000001)) - floor_db) / -floor_db, 0.0, 1.0)
+	return clampf((linear_to_db(maxf(magnitude, 0.000000001)) - floor_db) / -floor_db * sensitivity, 0.0, 1.0)
 
 func _smooth(current: float, target: float, dt: float) -> float:
 	var rate: float = attack_speed if target > current else release_speed
@@ -177,6 +194,7 @@ func _smooth(current: float, target: float, dt: float) -> float:
 func reset_history() -> void:
 	# Call on track changes or seeks to avoid a false beat from the discontinuity.
 	_baseline = 0.0
+	signal_active = false
 	_previous_level = 0.0
 	_warmup = 0.0
 	beat_pulse = 0.0

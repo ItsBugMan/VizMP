@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "name": "Orbital EVA / Astronauts",
+  "colors": {
+    "background": "#0e0f14",
+    "panel": "#363537",
+    "surface": "#514f50",
+    "border": "#968579",
+    "accent": "#ffa761",
+    "text": "#e6e7e5",
+    "muted": "#a6a5a3"
+  },
+  "atlas": "orbital-eva.svg",
+  "regions": {
+    "panel": [
+      0,
+      0,
+      96,
+      96
+    ]
+  },
+  "margins": [
+    20,
+    20,
+    20,
+    20
+  ],
+  "chrome": {
+    "surface": "metal",
+    "artwork": "orbital-eva-art.svg",
+    "glyphs": [
+      "|\u25c1",
+      "\u25b7",
+      "\u2161",
+      "\u25b7|"
+    ]
+  }
+}

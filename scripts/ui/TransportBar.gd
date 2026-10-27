@@ -31,6 +31,8 @@ func _ready() -> void:
 		player.stream_paused = false)
 	_buttons[2].pressed.connect(func() -> void: player.stream_paused = true)
 	_buttons[3].pressed.connect(func() -> void: next_requested.emit())
+	SkinManager.skin_changed.connect(_refresh_glyphs)
+	_refresh_glyphs()
 	slider = HSlider.new()
 	slider.step = 0.01
 	slider.custom_minimum_size.y = 22
@@ -43,8 +45,16 @@ func _ready() -> void:
 		if not _dragging and not _syncing: seek_to(value))
 	add_child(slider)
 	_time = Label.new()
+	_time.theme_type_variation = &"LCDReadout"
 	add_child(_time)
 	_build_volume()
+
+func _refresh_glyphs() -> void:
+	var labels: Array = ["Previous", "Play", "Pause", "Next"]
+	var glyphs: Array = SkinManager.chrome.get("glyphs", labels)
+	for i in range(_buttons.size()):
+		_buttons[i].text = glyphs[i]
+		_buttons[i].tooltip_text = labels[i]
 
 func _build_volume() -> void:
 	_volume_title = Label.new()

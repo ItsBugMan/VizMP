@@ -76,7 +76,7 @@ func _run() -> void:
 	_check(manager.preferences.mode == 2 and manager.preferences.audio_source == "playlist", "Mode and audio preferences persist")
 	_check(manager.preferences.skin == settings.skin and manager.preferences.playlist_directory == settings.playlist_directory, "Skin and playlist directory persist")
 	var invalid: Dictionary = manager.normalized_preferences({"mode": 999, "quality": "bad", "audio_source": "bad"})
-	_check(invalid.mode == 4 and invalid.quality == 1 and invalid.audio_source == "desktop", "Malformed preference fields normalize safely")
+	_check(invalid.mode == 6 and invalid.quality == 1 and invalid.audio_source == "desktop", "Malformed preference fields normalize safely")
 	# Test the actual modal; opening/canceling must not modify saved preferences.
 	manager.show_configuration(false)
 	await process_frame

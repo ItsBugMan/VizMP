@@ -2,13 +2,16 @@ extends Node
 ## Validated data-only skin manifests. One shared Theme per application skin.
 
 signal skin_changed
-const BUILTINS: Array[String] = ["res://skins/classic-mint.json", "res://skins/midnight-violet.json", "res://skins/amber-terminal.json", "res://skins/cyberpunk.json", "res://skins/brushed-metal.json", "res://skins/retro-phosphor.json"]
+const BUILTINS: Array[String] = ["res://skins/classic-mint.json", "res://skins/midnight-violet.json", "res://skins/amber-terminal.json", "res://skins/cyberpunk.json", "res://skins/brushed-metal.json", "res://skins/retro-phosphor.json", "res://skins/y2k-chrome.json", "res://skins/neon-ronin.json", "res://skins/v12-redline.json", "res://skins/arsenal-titanium.json", "res://skins/velvet-muse.json", "res://skins/orbital-eva.json", "res://skins/sentinel-head.json", "res://skins/xeno-pod.json"]
 const SETTINGS_PATH: String = "user://skin.cfg"
 var current_path: String = ""
 var skin_name: String = ""
 var active_theme: Theme
 var background_color := Color("#10191c")
 var last_error: String = ""
+var chrome: Dictionary = {}
+var artwork: Texture2D
+var accent_color := Color("#85d9ff")
 var _roots: Array[WeakRef] = []
 
 func _ready() -> void:
@@ -48,11 +51,33 @@ func load_skin(path: String, persist: bool = true) -> Error:
 	for key in ["background", "panel", "surface", "border", "accent", "text", "muted"]:
 		if not colors.get(key) is String or not Color.html_is_valid(colors[key]):
 			return _reject("Invalid or missing skin color: " + key)
+	var next_chrome: Variant = data.get("chrome", {})
+	if not next_chrome is Dictionary:
+		return _reject("Skin chrome must be an object.")
+	var next_artwork: Texture2D
+	if not next_chrome.is_empty():
+		if not next_chrome.get("surface") in ["metal", "plastic", "mech"]:
+			return _reject("Chrome surface must be metal, plastic or mech.")
+		if not next_chrome.get("artwork") is String:
+			return _reject("Chrome requires artwork.")
+		next_artwork = _load_texture(path.get_base_dir().path_join(next_chrome.artwork))
+		if next_artwork == null:
+			return _reject("Chrome artwork is missing or oversized.")
+		var glyphs: Variant = next_chrome.get("glyphs", [])
+		if not glyphs is Array or glyphs.size() != 4:
+			return _reject("Chrome requires four transport glyphs.")
+		for glyph in glyphs:
+			if not glyph is String or glyph.length() > 12:
+				return _reject("Invalid transport glyph.")
 	var theme := Theme.new()
 	theme.default_font_size = 14
 	var font := SystemFont.new()
-	font.font_names = PackedStringArray(["Consolas", "Cascadia Mono"]) if data.name == "Retro Phosphor" else PackedStringArray(["Segoe UI", "Noto Sans"])
+	font.font_names = PackedStringArray(["Consolas", "Cascadia Mono"]) if data.name == "Retro Phosphor" or not next_chrome.is_empty() else PackedStringArray(["Segoe UI", "Noto Sans"])
 	theme.default_font = font
+	theme.set_type_variation(&"LCDReadout", &"Label")
+	theme.set_color("font_color", "LCDReadout", Color(colors.accent))
+	theme.set_font_size("font_size", "LCDReadout", 18)
+	theme.set_stylebox("normal", "LCDReadout", _flat(Color(colors.background), Color(colors.border), 8))
 	var panel: StyleBox = _flat(Color(colors.panel), Color(colors.border), 10)
 	var normal: StyleBox = _flat(Color(colors.surface), Color(colors.border), 8)
 	var hover: StyleBox = _flat(Color(colors.surface).lightened(0.12), Color(colors.accent), 8)
@@ -127,6 +152,9 @@ func load_skin(path: String, persist: bool = true) -> Error:
 	theme.set_constant("separation", "HSplitContainer", 8)
 	theme.set_constant("separation", "VSplitContainer", 8)
 	active_theme = theme
+	chrome = next_chrome.duplicate(true)
+	artwork = next_artwork
+	accent_color = Color(colors.accent)
 	background_color = Color(colors.background)
 	current_path = path
 	skin_name = data.name.left(80)
@@ -142,6 +170,20 @@ func load_skin(path: String, persist: bool = true) -> Error:
 		config.save(SETTINGS_PATH)
 	skin_changed.emit()
 	return OK
+
+func display_name(path: String) -> String:
+	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	return str(data.get("name", path.get_file().get_basename())) if data is Dictionary else path.get_file().get_basename()
+
+func _load_texture(path: String) -> Texture2D:
+	var texture: Texture2D
+	if path.begins_with("res://") and ResourceLoader.exists(path, "Texture2D"):
+		texture = load(path) as Texture2D
+	else:
+		var bitmap := Image.new()
+		if bitmap.load(path) == OK: texture = ImageTexture.create_from_image(bitmap)
+	if texture == null or texture.get_width() > 8192 or texture.get_height() > 8192: return null
+	return texture
 
 func _flat(background: Color, border: Color, margin: float) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()

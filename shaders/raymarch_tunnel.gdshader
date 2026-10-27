@@ -22,7 +22,7 @@ vec2 centerline(float z) {
 // All longitudinal frequencies are multiples of 0.01. The geometry and
 // palette repeat exactly after 100*TAU, allowing seamless CPU phase wrapping.
 vec2 corridor_space(vec3 p) {
-	return rotation(p.z * 0.09 + audio_bands.y * 0.65) * (p.xy - centerline(p.z));
+	return rotation(p.z * 0.09) * (p.xy - centerline(p.z));
 }
 
 float field(vec3 p, int folds) {
@@ -30,7 +30,7 @@ float field(vec3 p, int folds) {
 	vec2 f = q * 0.6;
 	float detail = 0.0;
 	float weight = 0.5;
-	mat2 fold_rotation = rotation(0.72 + audio_bands.y * 0.22);
+	mat2 fold_rotation = rotation(0.72);
 	for (int i = 0; i < 5; i++) {
 		if (i >= folds) { break; }
 		f = fold_rotation * abs(f) - vec2(0.72, 0.34);
@@ -38,7 +38,7 @@ float field(vec3 p, int folds) {
 		weight *= 0.5;
 	}
 	float octagon = max(max(abs(q.x), abs(q.y)), (abs(q.x) + abs(q.y)) * 0.70710678);
-	float radius = 3.0 + audio_details.x * 0.28 - detail * 0.22;
+	float radius = 3.0 - detail * 0.22;
 	float wall = radius - octagon;
 	// Narrow octagonal frames sit slightly inside the folded corridor wall.
 	float frame = max(abs(wall - 0.18) - 0.07, abs(sin(p.z * 1.6)) * 0.65 - 0.065);
@@ -51,7 +51,7 @@ void fragment() {
 	vec3 origin = vec3(centerline(flight_distance), flight_distance);
 	vec2 ahead = (centerline(flight_distance + 3.0) - origin.xy) / 3.0;
 	vec3 ray = normalize(vec3(rotation(sin(flight_distance * 0.05) * 0.09) * uv * 1.45 + ahead, 1.0));
-	int folds = min(fold_limit, 2 + int(floor(clamp(audio_bands.y, 0.0, 1.0) * 3.0)));
+	int folds = fold_limit;
 	highp float travel = 0.0;
 	float haze = 0.0;
 	bool hit = false;
@@ -62,7 +62,7 @@ void fragment() {
 		float distance_to_surface = field(p, folds);
 		float epsilon = max(0.003, travel * 0.00035);
 		if (distance_to_surface < epsilon) { hit = true; break; }
-		haze += exp(-abs(distance_to_surface) * 12.0) * 0.005;
+		haze += exp(-abs(distance_to_surface) * 12.0) * (0.005 + audio_details.x * 0.012);
 		// Warps/folds make this a distance estimator, not an exact SDF.
 		travel += clamp(distance_to_surface * 0.42, 0.012, 1.4);
 	}
@@ -81,5 +81,5 @@ void fragment() {
 	}
 	color += vec3(0.08, 0.015, 0.13) * exp(-dot(uv, uv) * 12.0) * (0.18 + audio_bands.w * 0.3);
 	color *= 1.0 - smoothstep(0.35, 1.35, length(uv)) * 0.45;
-	COLOR = vec4(color * 1.35, 1.0);
+	COLOR = vec4(color * (1.35 + audio_bands.x * 1.7 + audio_details.x * 1.2), 1.0);
 }

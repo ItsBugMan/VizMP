@@ -4,6 +4,7 @@ const AUDIO_LOADER = preload("res://scripts/audio/AudioStreamLoader.gd")
 const DOCK_LAYOUT = preload("res://scripts/ui/DockLayout.gd")
 const EQUALIZER = preload("res://scripts/ui/EqualizerPanel.gd")
 const PLAYLIST = preload("res://scripts/ui/PlaylistPanel.gd")
+const VISUAL_SETTINGS_PATH: String = "user://visualizer.cfg"
 @export var save_layout_enabled: bool = true
 @onready var _player: AudioStreamPlayer = $Player
 @onready var _visualizer_host: Control = $Visualizer
@@ -26,6 +27,11 @@ var _visual_mode: OptionButton
 var _updates: AcceptDialog
 var _update_status: Label
 var _track_name: String = "Open or drop MP3, OGG, WAV or FLAC files."
+var visualizer_enabled: bool = false
+var _visual_settings: AcceptDialog
+var _viewport_toggle: CheckBox
+var _sensitivity_slider: HSlider
+var _fullscreen_restore_enabled: bool = false
 
 func _ready() -> void:
 	get_window().min_size = Vector2i(1000, 800)
@@ -81,7 +87,7 @@ func _ready() -> void:
 	get_window().files_dropped.connect(_on_files_dropped)
 	get_tree().auto_accept_quit = false
 	get_window().close_requested.connect(_on_close)
-	_layout.restore_layout.call_deferred()
+	_restore_player_preferences.call_deferred()
 	_updates = preload("res://scripts/ui/UpdateDialog.gd").new()
 	add_child(_updates)
 	AutoUpdater.status_changed.connect(func(message: String) -> void: _update_status.text = message)
@@ -122,13 +128,14 @@ func _build_deck(content: VBoxContainer) -> void:
 	settings.text = "Settings / skin"
 	content.add_child(settings)
 	var menu: PopupMenu = settings.get_popup()
-	for label in ["Classic Mint", "Midnight Violet", "Amber Terminal", "Cyberpunk", "Brushed Metal", "Retro Phosphor"]:
-		menu.add_radio_check_item(label)
+	for path in SkinManager.BUILTINS:
+		menu.add_radio_check_item(SkinManager.display_name(path))
 	menu.add_separator()
 	menu.add_item("Load custom skin…", 100)
 	menu.add_item("Reset panel layout", 101)
 	menu.add_item("Screensaver settings…", 102)
 	menu.add_item("Check for updates…", 103)
+	menu.add_item("Visualizer settings…", 104)
 	menu.id_pressed.connect(func(id: int) -> void:
 		if id < SkinManager.BUILTINS.size():
 			_load_skin(SkinManager.BUILTINS[id])
@@ -140,7 +147,9 @@ func _build_deck(content: VBoxContainer) -> void:
 			ScreensaverManager.show_configuration()
 		elif id == 103:
 			_updates.popup_centered()
-			AutoUpdater.check_for_updates())
+			AutoUpdater.check_for_updates()
+		elif id == 104:
+			_show_visual_settings())
 	menu.about_to_popup.connect(func() -> void:
 		for i in range(SkinManager.BUILTINS.size()):
 			menu.set_item_checked(i, SkinManager.current_path == SkinManager.BUILTINS[i]))
@@ -157,11 +166,7 @@ func _build_visualizer(content: VBoxContainer) -> void:
 	content.add_child(controls)
 	var mode := OptionButton.new()
 	_visual_mode = mode
-	mode.add_item("Radial spectrum")
-	mode.add_item("Particle galaxy")
-	mode.add_item("Fractal tunnel")
-	mode.add_item("Spectrum city")
-	mode.add_item("Vector CRT scope")
+	for label in _visualizer_host.MODE_NAMES: mode.add_item(label)
 	mode.item_selected.connect(_visualizer_host.set_mode)
 	_visualizer_host.mode_changed.connect(func(selected: int) -> void: mode.select(selected))
 	controls.add_child(mode)
@@ -194,6 +199,62 @@ func _build_visualizer(content: VBoxContainer) -> void:
 	_visualizer_host.custom_minimum_size = Vector2(320, 200)
 	_visualizer_host.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_visualizer_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+func _restore_player_preferences() -> void:
+	_layout.restore_layout()
+	var config := ConfigFile.new()
+	if save_layout_enabled and config.load(VISUAL_SETTINGS_PATH) == OK:
+		visualizer_enabled = bool(config.get_value("visualizer", "enabled", false))
+		var sensitivity: Variant = config.get_value("audio", "sensitivity", 1.0)
+		if sensitivity is float or sensitivity is int: AudioAnalyzer.sensitivity = float(sensitivity)
+	set_visualizer_enabled(visualizer_enabled, false)
+
+func set_visualizer_enabled(enabled: bool, persist: bool = true) -> void:
+	if _immersive and not enabled: set_visualizer_fullscreen(false)
+	visualizer_enabled = enabled
+	_visualizer_host.set_viewport_enabled(enabled)
+	_layout.set_panel_visible("visualizer", enabled)
+	if _viewport_toggle != null: _viewport_toggle.set_pressed_no_signal(enabled)
+	if persist: _save_visual_settings()
+
+func _save_visual_settings() -> void:
+	if not save_layout_enabled: return
+	var config := ConfigFile.new()
+	config.set_value("visualizer", "enabled", visualizer_enabled)
+	config.set_value("audio", "sensitivity", AudioAnalyzer.sensitivity)
+	config.save(VISUAL_SETTINGS_PATH)
+
+func _show_visual_settings() -> void:
+	if _visual_settings == null:
+		_visual_settings = AcceptDialog.new()
+		_visual_settings.title = "Visualizer Settings"
+		_visual_settings.min_size = Vector2i(460, 220)
+		add_child(_visual_settings)
+		SkinManager.register_root(_visual_settings)
+		var column := VBoxContainer.new()
+		_visual_settings.add_child(column)
+		_viewport_toggle = CheckBox.new()
+		_viewport_toggle.text = "Enable Visualizer Viewport"
+		_viewport_toggle.toggled.connect(set_visualizer_enabled)
+		column.add_child(_viewport_toggle)
+		var label := Label.new()
+		label.text = "Audio sensitivity"
+		column.add_child(label)
+		_sensitivity_slider = HSlider.new()
+		_sensitivity_slider.min_value = 0.0
+		_sensitivity_slider.max_value = 8.0
+		_sensitivity_slider.step = 0.05
+		column.add_child(_sensitivity_slider)
+		_sensitivity_slider.value_changed.connect(func(value: float) -> void:
+			AudioAnalyzer.sensitivity = value
+			label.text = "Audio sensitivity: %.2f×" % value
+			_save_visual_settings())
+		var hint := Label.new()
+		hint.text = "F11 opens the visualizer directly. Esc restores the deck."
+		column.add_child(hint)
+	_viewport_toggle.set_pressed_no_signal(visualizer_enabled)
+	_sensitivity_slider.value = AudioAnalyzer.sensitivity
+	_visual_settings.popup_centered()
 
 func _load_track(path: String) -> void:
 	var stream: AudioStream = AUDIO_LOADER.load_file(path)
@@ -253,6 +314,8 @@ func set_visualizer_fullscreen(enabled: bool) -> void:
 	if _immersive == enabled: return
 	_immersive = enabled
 	if enabled:
+		_fullscreen_restore_enabled = visualizer_enabled
+		_visualizer_host.set_viewport_enabled(true)
 		_layout.save_layout()
 		_visual_parent = _visualizer_host.get_parent()
 		_visual_index = _visualizer_host.get_index()
@@ -277,6 +340,7 @@ func set_visualizer_fullscreen(enabled: bool) -> void:
 		for window in _visible_windows:
 			if is_instance_valid(window): window.show()
 		_visible_windows.clear()
+		set_visualizer_enabled(_fullscreen_restore_enabled, false)
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:

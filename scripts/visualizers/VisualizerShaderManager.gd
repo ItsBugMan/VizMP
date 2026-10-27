@@ -7,6 +7,8 @@ var _pixels := PackedByteArray()
 var _image: Image
 var _texture: ImageTexture
 var _beat_serial: int = 0
+var _bands := Vector4.ZERO
+var _details := Vector4.ZERO
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -32,11 +34,12 @@ func _publish_spectrum() -> void:
 	_image.set_data(AudioAnalyzer.BIN_COUNT, 1, false, Image.FORMAT_R8, _pixels)
 	_texture.update(_image)
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	# Pulse decays every rendered frame, independently of the analysis cadence.
 	# vec4 packing reduces RenderingServer calls. Never read globals back here:
 	# global_shader_parameter_get() can synchronize the render thread.
-	RenderingServer.global_shader_parameter_set(&"audio_bands", Vector4(
-		AudioAnalyzer.bass, AudioAnalyzer.mid, AudioAnalyzer.treble, AudioAnalyzer.volume))
-	RenderingServer.global_shader_parameter_set(&"audio_details", Vector4(
-		AudioAnalyzer.sub_bass, AudioAnalyzer.highs, AudioAnalyzer.beat_pulse, 0.0))
+	var blend: float = 1.0 - exp(-delta * 24.0)
+	_bands = _bands.lerp(Vector4(AudioAnalyzer.bass, AudioAnalyzer.mid, AudioAnalyzer.treble, AudioAnalyzer.volume), blend)
+	_details = _details.lerp(Vector4(AudioAnalyzer.sub_bass, AudioAnalyzer.highs, AudioAnalyzer.beat_pulse, 0.0), blend)
+	RenderingServer.global_shader_parameter_set(&"audio_bands", _bands)
+	RenderingServer.global_shader_parameter_set(&"audio_details", _details)

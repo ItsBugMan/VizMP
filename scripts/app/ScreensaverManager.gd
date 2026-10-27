@@ -119,7 +119,7 @@ static func normalized_preferences(candidate: Dictionary) -> Dictionary:
 	for key in ["mode", "quality", "scope_palette"]:
 		var value: Variant = candidate.get(key, clean[key])
 		if value is int:
-			clean[key] = clampi(value, 0, 4 if key == "mode" else (2 if key == "quality" else 1))
+			clean[key] = clampi(value, 0, 6 if key == "mode" else (2 if key == "quality" else 1))
 	for key in ["skin", "playlist_directory"]:
 		if candidate.get(key) is String:
 			clean[key] = candidate[key].strip_edges()
