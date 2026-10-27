@@ -62,6 +62,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Audio tests failed' }
           & $godot --headless --path . --script res://tests/flac_smoke.gd
           if ($LASTEXITCODE -ne 0) { throw 'FLAC tests failed' }
+          & $godot --headless --path . --script res://tests/volume_smoke.gd
+          if ($LASTEXITCODE -ne 0) { throw 'Volume tests failed' }
           & $godot --headless --path . --script res://tests/updater_smoke.gd
           if ($LASTEXITCODE -ne 0) { throw 'Updater tests failed' }
           & ./tests/update_helper_smoke.ps1

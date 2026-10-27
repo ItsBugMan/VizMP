@@ -35,6 +35,7 @@ modes, and press **F11** when you want the visuals to fill the screen.
 - **Visualize desktop audio.** Enable **Live desktop audio** to react to music, browser audio or games playing through your default Windows output device.
 - **Build a local library.** Add music folders, scan their subfolders, double-click a track to play it, or queue the whole library.
 - **Keep playback within reach.** Previous, play, pause, next, elapsed time and a seek bar are built in.
+- **Set your listening level.** File volume and mute live in the transport panel, with a percentage display and automatically saved preferences.
 - **See what's playing.** Track titles, artists, albums and embedded artwork appear where the file's metadata is supported.
 - **Shape file playback.** A six-band equalizer lets you adjust the sound from bass to treble.
 
@@ -106,6 +107,7 @@ it? The implementation guides live in [`docs/`](docs/):
 
 - [Custom skins and panel layout](docs/MODULAR_UI_SKINS.md)
 - [Library, artwork, transport and graphics](docs/FIDELITY_AND_LIBRARY.md)
+- [Volume, mute and saved audio preferences](docs/VOLUME_CONTROL.md)
 - [Desktop audio capture](docs/DESKTOP_LOOPBACK.md)
 - [FLAC extension setup](docs/FLAC_WINDOWS.md)
 - [Particle Galaxy](docs/PARTICLE_GALAXY.md) · [Fractal Tunnel and Spectrum City](docs/TUNNEL_AND_CITY.md)

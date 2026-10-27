@@ -10,6 +10,11 @@ var _syncing := false
 var _buttons: Array[Button] = []
 var _seek_guard := 0.0
 var _last_position := 0.0
+var volume_slider: HSlider
+var mute_button: CheckBox
+var _volume_label: Label
+var _volume_title: Label
+var _desktop_volume_note: Label
 
 func _ready() -> void:
 	var buttons := HBoxContainer.new()
@@ -39,6 +44,59 @@ func _ready() -> void:
 	add_child(slider)
 	_time = Label.new()
 	add_child(_time)
+	_build_volume()
+
+func _build_volume() -> void:
+	_volume_title = Label.new()
+	_volume_title.text = "File volume"
+	add_child(_volume_title)
+	var row := HBoxContainer.new()
+	add_child(row)
+	mute_button = CheckBox.new()
+	mute_button.text = "Mute"
+	mute_button.toggled.connect(AudioOutput.set_muted)
+	row.add_child(mute_button)
+	volume_slider = HSlider.new()
+	volume_slider.min_value = 0.0
+	volume_slider.max_value = 100.0
+	volume_slider.step = 1.0
+	volume_slider.custom_minimum_size = Vector2(80, 24)
+	volume_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	volume_slider.value_changed.connect(AudioOutput.set_volume_percent)
+	row.add_child(volume_slider)
+	_volume_label = Label.new()
+	_volume_label.custom_minimum_size.x = 45
+	_volume_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	row.add_child(_volume_label)
+	_desktop_volume_note = Label.new()
+	_desktop_volume_note.text = "Desktop volume: use Windows."
+	_desktop_volume_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	add_child(_desktop_volume_note)
+	AudioOutput.changed.connect(_sync_volume)
+	AudioLoopbackManager.mode_changed.connect(_on_volume_mode_changed)
+	_sync_volume()
+
+func _on_volume_mode_changed(_mode: int) -> void:
+	_sync_volume()
+
+func _sync_volume() -> void:
+	var live: bool = AudioLoopbackManager.mode == AudioLoopbackManager.Mode.DESKTOP
+	volume_slider.set_value_no_signal(AudioOutput.get_volume_percent())
+	mute_button.set_pressed_no_signal(AudioOutput.muted)
+	volume_slider.editable = not live
+	mute_button.disabled = live
+	_volume_title.text = "File volume (saved)" if live else "File volume"
+	_desktop_volume_note.visible = live
+	var silent: bool = AudioOutput.muted or AudioOutput.volume_linear <= 0.0
+	_volume_label.text = "%d%%" % roundi(AudioOutput.get_volume_percent())
+	var detail: String = "Silent" if AudioOutput.volume_linear <= 0.0 else "%+.1f dB" % AudioOutput.get_volume_db()
+	var tip: String = "File playback: %s (%s)%s" % [_volume_label.text, detail, " — muted" if AudioOutput.muted else ""]
+	if live:
+		tip = "Saved file volume. Desktop capture is unchanged; adjust other apps in Windows."
+	volume_slider.tooltip_text = tip
+	mute_button.tooltip_text = tip if live else "Mute file playback; keep the selected volume."
+	_volume_label.tooltip_text = tip
+	_volume_label.modulate.a = 0.5 if silent or live else 1.0
 
 func seek_to(seconds: float) -> void:
 	if player.stream == null or AudioLoopbackManager.mode != AudioLoopbackManager.Mode.FILE: return

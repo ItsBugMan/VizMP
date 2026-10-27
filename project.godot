@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 ScreensaverManager="*res://scripts/app/ScreensaverManager.gd"
+AudioOutput="*res://scripts/audio/AudioOutput.gd"
 AudioAnalyzer="*res://scripts/audio/AudioAnalyzer.gd"
 AudioLoopbackManager="*res://scripts/audio/AudioLoopbackManager.gd"
 StereoPCM="*res://scripts/audio/StereoPCM.gd"
